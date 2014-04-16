@@ -148,7 +148,11 @@ expression
   | ternaryExpression;
 
 ternaryExpression
-	:	(orExpression '?')=> ifClause=orExpression '?' ifExpr=orExpression? ':' elseExpr=orExpression
+scope { boolean explicitPackageReferencePossible; }
+@init { $ternaryExpression::explicitPackageReferencePossible = true; }
+	:	(orExpression '?')=> ifClause=orExpression 
+	  '?' (('(') => '(' ifExpr=orExpression ')' | { !($ternaryExpression::explicitPackageReferencePossible = false) }?=> ifExpr=orExpression? { ($ternaryExpression::explicitPackageReferencePossible = true) }?=>) 
+	  ':' elseExpr=orExpression
 	-> ^(EXPRESSION["TernaryExpression"] $ifClause { ifExpr == null ? $ifClause.tree : $ifExpr.tree } { $elseExpr.tree })
 	| (orExpression IF)=> ifExpr2=orExpression IF ifClause2=orExpression
   -> ^(EXPRESSION["TernaryExpression"] $ifClause2 $ifExpr2 { EvaluationExpression.VALUE })
@@ -253,7 +257,7 @@ valueExpression
 	| parenthesesExpression 
 	| literal 
 	| VAR -> { getInputSelection($VAR) }
-  | ((ID ':')=> packageName=ID ':')? constant=ID { getScope($packageName.text).getConstantRegistry().get($constant.text) != null }? => 
+  | ({$ternaryExpression::explicitPackageReferencePossible}?=> (ID ':')=> packageName=ID ':')? constant=ID { getScope($packageName.text).getConstantRegistry().get($constant.text) != null }? => 
     -> { getScope($packageName.text).getConstantRegistry().get($constant.text) }  
 	| arrayCreation 
 	| objectCreation;
