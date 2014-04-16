@@ -80,7 +80,7 @@ catch (RecognitionException e) {
 
   private boolean setInnerOutput(Token VAR, Operator<?> op) {
 	  JsonStreamExpression output = new JsonStreamExpression(op.getOutput($objectCreation::mappings.size()));
-	  $objectCreation::mappings.add(new ObjectCreation.TagMapping(output, new JsonStreamExpression(op)));
+	  $objectCreation::mappings.add(new ObjectCreation.SymbolicAssignment(output, new JsonStreamExpression(op)));
 	  getVariableRegistry().getRegistry(1).put(VAR.getText(), output);
 	  return true;
 	}
@@ -289,10 +289,10 @@ fieldAssignment
     { $objectCreation::mappings.add(new ObjectCreation.FieldAssignment($ID.text, $expression.tree)); } -> )
   | (VAR '.' STAR)=> VAR '.' STAR { $objectCreation::mappings.add(new ObjectCreation.CopyFields(getInputSelection($VAR))); } ->
   | (VAR)=> p=generalPathExpression (
-    (':')=> ':' e2=expression { $objectCreation::mappings.add(new ObjectCreation.TagMapping($p.tree, $e2.tree)); } ->
+    (':')=> ':' e2=expression { $objectCreation::mappings.add(new ObjectCreation.SymbolicAssignment($p.tree, $e2.tree)); } ->
     | /* nothing */ { $objectCreation::mappings.add(new ObjectCreation.FieldAssignment(getAssignmentName($p.tree), $p.tree)); } ->
     )
-  | v=valueExpression ':' e2=expression { $objectCreation::mappings.add(new ObjectCreation.TagMapping($v.tree, $e2.tree)); } ->
+  | v=valueExpression ':' e2=expression { $objectCreation::mappings.add(new ObjectCreation.SymbolicAssignment($v.tree, $e2.tree)); } ->
   ;
   catch [RecognitionException re] { explainUsage("inside of a json object {...} only <field: expression>, <\$var.path>, <\$var = operator> or <\$var: expression> are allowed", re); }
 

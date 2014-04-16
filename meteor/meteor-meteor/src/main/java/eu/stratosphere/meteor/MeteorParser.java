@@ -1,4 +1,4 @@
-// $ANTLR 3.5 /home/arv/workspace/stratosphere-sopremo/meteor/meteor-meteor/src/main/java/eu/stratosphere/meteor/Meteor.g 2014-04-16 22:29:28
+// $ANTLR 3.5 /home/arv/workspace/stratosphere-sopremo/meteor/meteor-meteor/src/main/java/eu/stratosphere/meteor/Meteor.g 2014-04-16 22:34:24
  
 package eu.stratosphere.meteor; 
 
@@ -135,7 +135,7 @@ public class MeteorParser extends MeteorParserBase {
 
 	  private boolean setInnerOutput(Token VAR, Operator<?> op) {
 		  JsonStreamExpression output = new JsonStreamExpression(op.getOutput(objectCreation_stack.peek().mappings.size()));
-		  objectCreation_stack.peek().mappings.add(new ObjectCreation.TagMapping(output, new JsonStreamExpression(op)));
+		  objectCreation_stack.peek().mappings.add(new ObjectCreation.SymbolicAssignment(output, new JsonStreamExpression(op)));
 		  getVariableRegistry().getRegistry(1).put(VAR.getText(), output);
 		  return true;
 		}
@@ -5742,7 +5742,7 @@ public class MeteorParser extends MeteorParserBase {
 							state._fsp--;
 							if (state.failed) return retval;
 							if ( state.backtracking==0 ) stream_expression.add(e2.getTree());
-							if ( state.backtracking==0 ) { objectCreation_stack.peek().mappings.add(new ObjectCreation.TagMapping((p!=null?((EvaluationExpression)p.getTree()):null), (e2!=null?((EvaluationExpression)e2.getTree()):null))); }
+							if ( state.backtracking==0 ) { objectCreation_stack.peek().mappings.add(new ObjectCreation.SymbolicAssignment((p!=null?((EvaluationExpression)p.getTree()):null), (e2!=null?((EvaluationExpression)e2.getTree()):null))); }
 							// AST REWRITE
 							// elements: 
 							// token labels: 
@@ -5755,7 +5755,7 @@ public class MeteorParser extends MeteorParserBase {
 							RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.getTree():null);
 
 							root_0 = (EvaluationExpression)adaptor.nil();
-							// 292:116: ->
+							// 292:124: ->
 							{
 								root_0 = null;
 							}
@@ -5814,7 +5814,7 @@ public class MeteorParser extends MeteorParserBase {
 					state._fsp--;
 					if (state.failed) return retval;
 					if ( state.backtracking==0 ) stream_expression.add(e2.getTree());
-					if ( state.backtracking==0 ) { objectCreation_stack.peek().mappings.add(new ObjectCreation.TagMapping((v!=null?((EvaluationExpression)v.getTree()):null), (e2!=null?((EvaluationExpression)e2.getTree()):null))); }
+					if ( state.backtracking==0 ) { objectCreation_stack.peek().mappings.add(new ObjectCreation.SymbolicAssignment((v!=null?((EvaluationExpression)v.getTree()):null), (e2!=null?((EvaluationExpression)e2.getTree()):null))); }
 					// AST REWRITE
 					// elements: 
 					// token labels: 
@@ -5827,7 +5827,7 @@ public class MeteorParser extends MeteorParserBase {
 					RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.getTree():null);
 
 					root_0 = (EvaluationExpression)adaptor.nil();
-					// 295:126: ->
+					// 295:134: ->
 					{
 						root_0 = null;
 					}

@@ -72,7 +72,7 @@ public class ObjectCreationTest extends SyntaxTest {
 		final Projection filter = new Projection().
 			withInputs(input).
 			withResultProjection(new ObjectCreation(
-				new ObjectCreation.TagMapping(JsonUtil.createPath("0", "a"), JsonUtil.createPath("0", "b"))));
+				new ObjectCreation.SymbolicAssignment(JsonUtil.createPath("0", "a"), JsonUtil.createPath("0", "b"))));
 
 		final Sink sink = new Sink("file://q1.json").withInputs(filter);
 		final SopremoPlan expectedPlan = new SopremoPlan();
@@ -97,7 +97,7 @@ public class ObjectCreationTest extends SyntaxTest {
 		final Projection filter = new Projection().
 			withInputs(input).
 			withResultProjection(new ObjectCreation(
-				new ObjectCreation.TagMapping(
+				new ObjectCreation.SymbolicAssignment(
 					FunctionUtil.createFunctionCall(CoreFunctions.SUBSTRING,
 						JsonUtil.createPath("0", "a"), new ConstantExpression(1), new ConstantExpression(3)),
 					FunctionUtil.createFunctionCall(CoreFunctions.SUBSTRING,
