@@ -292,6 +292,7 @@ fieldAssignment
     (':')=> ':' e2=expression { $objectCreation::mappings.add(new ObjectCreation.TagMapping($p.tree, $e2.tree)); } ->
     | /* nothing */ { $objectCreation::mappings.add(new ObjectCreation.FieldAssignment(getAssignmentName($p.tree), $p.tree)); } ->
     )
+  | v=valueExpression ':' e2=expression { $objectCreation::mappings.add(new ObjectCreation.TagMapping($v.tree, $e2.tree)); } ->
   ;
   catch [RecognitionException re] { explainUsage("inside of a json object {...} only <field: expression>, <\$var.path>, <\$var = operator> or <\$var: expression> are allowed", re); }
 
