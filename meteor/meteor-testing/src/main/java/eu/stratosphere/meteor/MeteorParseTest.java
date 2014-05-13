@@ -23,6 +23,7 @@ import org.junit.Assert;
 import org.junit.Ignore;
 
 import eu.stratosphere.sopremo.EqualVerifyTest;
+import eu.stratosphere.sopremo.TestBase;
 import eu.stratosphere.sopremo.operator.SopremoPlan;
 import eu.stratosphere.sopremo.query.QueryParserException;
 import eu.stratosphere.sopremo.testing.SopremoTestUtil;
@@ -30,7 +31,7 @@ import eu.stratosphere.sopremo.testing.SopremoTestUtil;
 /**
  */
 @Ignore
-public class MeteorParseTest {
+public class MeteorParseTest extends TestBase {
 
 	private final String projectName;
 

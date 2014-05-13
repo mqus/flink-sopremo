@@ -96,7 +96,7 @@ public class SopremoRecord extends AbstractSopremoType implements ISopremoType {
 	private transient DataKryo kryo;
 
 	public SopremoRecord(SopremoRecordLayout layout, ITypeRegistry registry) {
-		init(layout, registry);
+		this.init(layout, registry);
 	}
 
 	void init(SopremoRecordLayout layout, ITypeRegistry registry) {
