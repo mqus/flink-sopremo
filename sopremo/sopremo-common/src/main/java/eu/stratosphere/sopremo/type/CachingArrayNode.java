@@ -133,7 +133,6 @@ public class CachingArrayNode<T extends IJsonNode> extends ArrayNode<T> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public void setSize(int size, T defaultNode) {
 		CachingList<T> cachingList = (CachingList<T>) this.getChildren();
 		int oldSize = cachingList.size();

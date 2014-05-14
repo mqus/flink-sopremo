@@ -668,33 +668,4 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 	protected SopremoRecordSchema createEmptySchema() {
 		return new SopremoRecordSchema();
 	}
-
-	//
-	// private SopremoRecordLayout getProjectedLayout(BitSet keyIndices) {
-	// SopremoRecordLayout layout = this.projectedLayouts.get(keyIndices);
-	// if (layout == null)
-	// this.projectedLayouts.put(keyIndices, layout = this.layout.project(keyIndices));
-	// return layout;
-	// }
-
-	private void setOrdering(final Channel input, final Ordering localOrder) {
-		if (localOrder != null) {
-			Ordering mergedOrder;
-			if (input.getLocalProperties().getOrdering() != null) {
-				mergedOrder = input.getLocalProperties().getOrdering().clone();
-
-				final int[] fieldPositions = localOrder.getFieldPositions();
-				final Order[] fieldOrders = localOrder.getFieldOrders();
-				final IntList coveredFields = new IntArrayList(mergedOrder.getFieldPositions());
-
-				for (int index = 0; index < fieldOrders.length; index++)
-					if (!coveredFields.contains(fieldPositions[index]))
-						mergedOrder.appendOrdering(fieldPositions[index], null, fieldOrders[index]);
-			} else
-				mergedOrder = localOrder;
-			input.getLocalProperties().setOrdering(mergedOrder);
-			input.setLocalStrategy(input.getLocalStrategy(), new FieldList(mergedOrder.getFieldPositions()),
-				mergedOrder.getFieldSortDirections());
-		}
-	}
 }
