@@ -28,6 +28,7 @@ import javolution.util.FastList;
 
 import com.esotericsoftware.kryo.DefaultSerializer;
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Registration;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
@@ -49,6 +50,7 @@ import eu.stratosphere.sopremo.type.IObjectNode;
 import eu.stratosphere.sopremo.type.MissingNode;
 import eu.stratosphere.sopremo.type.NullNode;
 import eu.stratosphere.sopremo.type.ObjectNode;
+import eu.stratosphere.sopremo.type.AbstractReusingSerializer;
 import eu.stratosphere.sopremo.type.ReusingSerializer;
 import eu.stratosphere.sopremo.type.TextNode;
 import eu.stratosphere.sopremo.type.TypeCoercer;
@@ -105,11 +107,10 @@ public class SopremoRecord extends AbstractSopremoType implements ISopremoType {
 
 		this.kryo = new DataKryo();
 		this.kryo.setReferences(false);
-		for (final Class<? extends IJsonNode> type : TypeCoercer.NUMERIC_TYPES)
-			this.kryo.register(type);
-		final List<Class<? extends Cloneable>> defaultTypes =
-			Arrays.asList(BooleanNode.class, TextNode.class, NullNode.class, ObjectNode.class, CachingArrayNode.class,
-				MissingNode.class, TreeMap.class, ArrayList.class);
+
+		final List<Class<?>> defaultTypes =
+			Arrays.<Class<?>> asList(BooleanNode.class, NullNode.class, MissingNode.class, TextNode.class, TreeMap.class, ArrayList.class,
+				ObjectNode.class, CachingArrayNode.class);
 		for (final Class<?> type : defaultTypes)
 			this.kryo.register(type);
 		this.kryo.getRegistration(ObjectNode.class).setSerializer(new ObjectSerializer());
@@ -119,9 +120,13 @@ public class SopremoRecord extends AbstractSopremoType implements ISopremoType {
 		this.kryo.registerAlias(ArrayNode.class, CachingArrayNode.class);
 		this.kryo.registerAlias(BooleanNode.UnmodifiableBoolean.class, BooleanNode.class);
 
+		for (final Class<? extends IJsonNode> type : TypeCoercer.NUMERIC_TYPES)
+			this.kryo.register(type, new ReusingFieldSerializer<IJsonNode>(this.kryo, type));
+
 		final List<Class<? extends IJsonNode>> types = registry.getTypes();
 		for (final Class<? extends IJsonNode> type : types)
-			this.kryo.register(type);
+			if (!ReusingSerializer.class.isInstance(this.kryo.register(type).getSerializer()))
+				throw new IllegalStateException("Custom type serializers must be ReusingSerializers");
 	}
 
 	/**
@@ -144,14 +149,14 @@ public class SopremoRecord extends AbstractSopremoType implements ISopremoType {
 	 * @param to
 	 */
 	public void copyTo(final SopremoRecord to) {
-		if (this.binaryRepresentation.size() > 0) {
+		if (this.binaryRepresentation.size() > 0 && to.layout == this.layout) {
 			to.binaryRepresentation.clear();
 			to.binaryRepresentation.addElements(0, this.binaryRepresentation.elements(), 0,
 				this.binaryRepresentation.size());
 			to.offsets = this.offsets.clone();
 		} else
 			to.binaryRepresentation.clear();
-		to.node = this.node.clone();
+		to.node = SopremoUtil.copyInto(this.node, to.node);
 	}
 
 	@Override
@@ -188,11 +193,14 @@ public class SopremoRecord extends AbstractSopremoType implements ISopremoType {
 		return this.node;
 	}
 
+	@SuppressWarnings("unchecked")
 	public IJsonNode getValueAtOffset(final int offset, final NodeCache nodeCache) {
 		if (offset == 0)
 			return this.getOrParseNode();
 		this.input.setBuffer(this.binaryRepresentation.elements(), offset, this.binaryRepresentation.size());
-		return (IJsonNode) this.kryo.readClassAndObject(this.input);
+		final Registration registration = this.kryo.readClass(this.input);
+		final Class<IJsonNode> type = registration.getType();
+		return ((ReusingSerializer<IJsonNode>) registration.getSerializer()).read(this.kryo, this.input, nodeCache.getNode(type), type);
 	}
 
 	@Override
@@ -278,7 +286,7 @@ public class SopremoRecord extends AbstractSopremoType implements ISopremoType {
 		return this.binaryRepresentation.size() + this.output.position();
 	}
 
-	public static class SopremoRecordKryoSerializer<Node extends IJsonNode> extends ReusingSerializer<SopremoRecord> {
+	public static class SopremoRecordKryoSerializer<Node extends IJsonNode> extends AbstractReusingSerializer<SopremoRecord> {
 		/*
 		 * (non-Javadoc)
 		 * @see com.esotericsoftware.kryo.Serializer#copy(com.esotericsoftware.kryo.Kryo, java.lang.Object)

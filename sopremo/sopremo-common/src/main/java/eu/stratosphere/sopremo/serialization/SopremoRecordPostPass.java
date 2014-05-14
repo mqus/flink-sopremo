@@ -47,6 +47,7 @@ import eu.stratosphere.compiler.plan.OptimizedPlan;
 import eu.stratosphere.compiler.plan.PlanNode;
 import eu.stratosphere.compiler.plan.SingleInputPlanNode;
 import eu.stratosphere.compiler.plan.SinkPlanNode;
+import eu.stratosphere.compiler.plan.SourcePlanNode;
 import eu.stratosphere.compiler.postpass.ConflictingFieldTypeInfoException;
 import eu.stratosphere.compiler.postpass.GenericFlatTypePostPass;
 import eu.stratosphere.compiler.postpass.MissingFieldTypeInfoException;
@@ -85,6 +86,32 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 		this.removeDummyNodes(plan);
 		super.postPass(plan);
 		this.addIdentityMapsToOutputsWithMultipleChannels(plan);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * eu.stratosphere.compiler.postpass.GenericRecordPostPass#traverse(eu.stratosphere.compiler.dag.candidate
+	 * .PlanNode, eu.stratosphere.compiler.postpass.AbstractSchema, boolean)
+	 */
+	@Override
+	protected void traverse(final PlanNode node, final SopremoRecordSchema parentSchema, final boolean createUtilities) {
+		// FIXME: workaround for Stratosphere #206
+		if (node instanceof SourcePlanNode)
+			((SourcePlanNode) node).setSerializer(createSerializer(new SopremoRecordSchema()));
+		else if (node instanceof SinkPlanNode)
+			this.setOrdering(((SingleInputPlanNode) node).getInput(),
+				((GenericDataSink) node.getPactContract()).getLocalOrder());
+		else if (node.getPactContract() instanceof SopremoReduceOperator)
+			this.setOrdering(((SingleInputPlanNode) node).getInput(),
+				((SopremoReduceOperator) node.getPactContract()).getInnerGroupOrder());
+		else if (node.getPactContract() instanceof SopremoCoGroupOperator) {
+			this.setOrdering(((DualInputPlanNode) node).getInput1(),
+				((SopremoCoGroupOperator) node.getPactContract()).getFirstInnerGroupOrdering());
+			this.setOrdering(((DualInputPlanNode) node).getInput2(),
+				((SopremoCoGroupOperator) node.getPactContract()).getSecondInnerGroupOrdering());
+		}
+		super.traverse(node, parentSchema, createUtilities);
 	}
 
 	private void removeDummyNodes(final OptimizedPlan plan) {
@@ -144,8 +171,7 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 	 * .AbstractSchema)
 	 */
 	@Override
-	protected TypeSerializerFactory<?> createSerializer(final SopremoRecordSchema schema)
-			throws MissingFieldTypeInfoException {
+	protected TypeSerializerFactory<?> createSerializer(final SopremoRecordSchema schema) {
 		// return new SopremoRecordSerializerFactory(this.layout, this.typeRegistry);
 		return new SopremoRecordSerializerFactory(this.layout.project(schema.getUsedKeys().toIntArray()), this.typeRegistry);
 	}
@@ -547,6 +573,27 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 	private void addOrderingToSchema(final Ordering o, final SopremoRecordSchema schema) {
 		for (int i = 0; i < o.getNumberOfFields(); i++)
 			schema.add(o.getFieldNumber(i));
+	}
+
+	private void setOrdering(final Channel input, final Ordering localOrder) {
+		if (localOrder != null) {
+			Ordering mergedOrder;
+			if (input.getLocalProperties().getOrdering() != null) {
+				mergedOrder = input.getLocalProperties().getOrdering().clone();
+
+				final int[] fieldPositions = localOrder.getFieldPositions();
+				final Order[] fieldOrders = localOrder.getFieldOrders();
+				final IntList coveredFields = new IntArrayList(mergedOrder.getFieldPositions());
+
+				for (int index = 0; index < fieldOrders.length; index++)
+					if (!coveredFields.contains(fieldPositions[index]))
+						mergedOrder.appendOrdering(fieldPositions[index], null, fieldOrders[index]);
+			} else
+				mergedOrder = localOrder;
+			input.getLocalProperties().setOrdering(mergedOrder);
+			input.setLocalStrategy(input.getLocalStrategy(), new FieldList(mergedOrder.getFieldPositions()),
+				mergedOrder.getFieldSortDirections());
+		}
 	}
 
 	@Override

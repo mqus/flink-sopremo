@@ -283,7 +283,7 @@ public class TextNode extends AbstractJsonNode implements IPrimitiveNode,
 		return new TextNode(v);
 	}
 
-	public static class TextNodeSerializer extends ReusingSerializer<TextNode> {
+	public static class TextNodeSerializer extends AbstractReusingSerializer<TextNode> {
 		/*
 		 * (non-Javadoc)
 		 * @see
