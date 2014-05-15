@@ -23,6 +23,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 import eu.stratosphere.api.common.distributions.DataDistribution;
 import eu.stratosphere.api.common.operators.DualInputOperator;
 import eu.stratosphere.api.common.operators.GenericDataSink;
@@ -180,41 +183,45 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 		for (PlanNode node : plan.getAllNodes()) {
 			List<Channel> outgoingChannels = node.getOutgoingChannels();
 			if (outgoingChannels.size() > 1) {
-				boolean sameLayout = true;
-				SopremoRecordSerializerFactory serializer = (SopremoRecordSerializerFactory) outgoingChannels.get(0).getSerializer();
-				SopremoRecordLayout layout = serializer.getLayout();
-				for (int index = 1; sameLayout && index < outgoingChannels.size(); index++)
-					sameLayout = layout.equals(((SopremoRecordSerializerFactory) outgoingChannels.get(index).getSerializer()).getLayout());
+				Multimap<SopremoRecordLayout, Channel> layouts = ArrayListMultimap.create();
+				for (Channel channel : outgoingChannels)
+					layouts.put(((SopremoRecordSerializerFactory) channel.getSerializer()).getLayout(), channel);
 
-				if (!sameLayout)
-					for (int index = 0; index < outgoingChannels.size(); index++) {
-						Channel originalChannel = outgoingChannels.get(index);
+				// we need indeed different layouts; create a dummy map node for each layout
+				if (layouts.size() > 1) {
+					// layout to dummy node is empty, so we can ignore all nodes that also require empty layout
+					layouts.removeAll(SopremoRecordLayout.EMPTY);
+
+					ITypeRegistry registry = ((SopremoRecordSerializerFactory) outgoingChannels.get(0).getSerializer()).getTypeRegistry();
+					for (SopremoRecordLayout layout : layouts.keys()) {
 						Channel inMemoryChannel = new Channel(node);
 						inMemoryChannel.setShipStrategy(ShipStrategyType.FORWARD);
+						inMemoryChannel.setLocalStrategy(LocalStrategy.NONE);
 
 						MapDescriptor mapDescriptor = new MapDescriptor();
-						MapNode mapNode =
-							new MapNode(new MapOperatorBase<IdentityMap>(IdentityMap.class, "dummy" +
-								originalChannel.getTarget().getNodeName()));
+						MapNode mapNode = new MapNode(new MapOperatorBase<IdentityMap>(IdentityMap.class, "dummy"));
 						SingleInputPlanNode dummyNode = mapDescriptor.instantiate(inMemoryChannel, mapNode);
 						inMemoryChannel.setTarget(dummyNode);
-						inMemoryChannel.setSerializer(new SopremoRecordSerializerFactory(SopremoRecordLayout.create(),
-							serializer.getTypeRegistry()));
+						inMemoryChannel.setSerializer(new SopremoRecordSerializerFactory(SopremoRecordLayout.EMPTY, registry));
 
-						Channel channelWithNewSource = new ForwardingChannel(dummyNode, originalChannel);
-						PlanNode target = originalChannel.getTarget();
-						if (target instanceof SingleInputPlanNode)
-							ReflectUtil.setField(target, "input", channelWithNewSource);
-						else if (target instanceof DualInputPlanNode) {
-							if (((DualInputPlanNode) target).getInput1() == originalChannel)
-								ReflectUtil.setField(target, "input1", channelWithNewSource);
-							else
-								ReflectUtil.setField(target, "input2", channelWithNewSource);
-						} else
-							throw new UnsupportedOperationException();
+						Collection<Channel> channelsToBeChanged = layouts.get(layout);
+						for (Channel originalChannel : channelsToBeChanged) {
+							Channel channelWithNewSource = new ForwardingChannel(dummyNode, originalChannel);
+							PlanNode target = originalChannel.getTarget();
+							if (target instanceof SingleInputPlanNode)
+								ReflectUtil.setField(target, "input", channelWithNewSource);
+							else if (target instanceof DualInputPlanNode) {
+								if (((DualInputPlanNode) target).getInput1() == originalChannel)
+									ReflectUtil.setField(target, "input1", channelWithNewSource);
+								else
+									ReflectUtil.setField(target, "input2", channelWithNewSource);
+							} else
+								throw new UnsupportedOperationException();
 
-						outgoingChannels.set(index, inMemoryChannel);
+							outgoingChannels.set(outgoingChannels.indexOf(originalChannel), inMemoryChannel);
+						}
 					}
+				}
 			}
 		}
 	}

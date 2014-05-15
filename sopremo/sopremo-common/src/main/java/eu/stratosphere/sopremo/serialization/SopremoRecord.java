@@ -29,8 +29,10 @@ import javolution.util.FastList;
 import com.esotericsoftware.kryo.DefaultSerializer;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Registration;
+import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
 
 import eu.stratosphere.core.memory.DataInputView;
 import eu.stratosphere.core.memory.DataOutputView;
@@ -124,9 +126,14 @@ public class SopremoRecord extends AbstractSopremoType implements ISopremoType {
 			this.kryo.register(type, new ReusingFieldSerializer<IJsonNode>(this.kryo, type));
 
 		final List<Class<? extends IJsonNode>> types = registry.getTypes();
-		for (final Class<? extends IJsonNode> type : types)
-			if (!ReusingSerializer.class.isInstance(this.kryo.register(type).getSerializer()))
+		for (final Class<? extends IJsonNode> type : types) {
+			final Registration registration = this.kryo.register(type);
+			final Serializer<?> serializer = registration.getSerializer();
+			if (serializer.getClass() == FieldSerializer.class)
+				registration.setSerializer(new ReusingFieldSerializer<IJsonNode>(this.kryo, type));
+			else if (!ReusingSerializer.class.isInstance(serializer)) 
 				throw new IllegalStateException("Custom type serializers must be ReusingSerializers");
+		}
 	}
 
 	/**
