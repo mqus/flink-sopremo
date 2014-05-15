@@ -22,6 +22,7 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Ignore;
 
+import eu.stratosphere.sopremo.EqualVerifyTest;
 import eu.stratosphere.sopremo.operator.SopremoPlan;
 import eu.stratosphere.sopremo.query.QueryParserException;
 import eu.stratosphere.sopremo.testing.SopremoTestUtil;
@@ -46,21 +47,6 @@ public class MeteorParseTest {
 		if (this.projectJar == null)
 			ProjectJars.put(this.projectName, this.projectJar = build(this.projectName));
 	}
-	
-	public File getResource(final String name) {
-		try {
-			return new File(MeteorParseTest.class.getClassLoader().getResources(name)
-				.nextElement().getFile());
-		} catch (IOException e) {
-			throw newAssertionError("Could not locate resource " + name, e);
-		}
-	}
-
-	private AssertionError newAssertionError(String message, Throwable cause) {
-		final AssertionError assertionError = new AssertionError(message);
-		assertionError.initCause(cause);
-		return assertionError;
-	}
 
 	public SopremoPlan parseScript(final String script) {
 		try {
@@ -68,7 +54,7 @@ public class MeteorParseTest {
 			this.initParser(queryParser);
 			return queryParser.tryParse(script);
 		} catch (final QueryParserException e) {
-			throw newAssertionError("could not parse script", e);
+			throw EqualVerifyTest.newAssertionError("could not parse script", e);
 		}
 	}
 
@@ -83,7 +69,7 @@ public class MeteorParseTest {
 			this.initParser(queryParser);
 			return queryParser.tryParse(script);
 		} catch (final Exception e) {
-			throw newAssertionError("could not parse script", e);
+			throw EqualVerifyTest.newAssertionError("could not parse script", e);
 		}
 	}
 
