@@ -95,8 +95,8 @@ public class SopremoKryo extends Kryo {
 				ctor = type.getConstructor((Class[]) null);
 			} catch (Exception ex) {
 				ctor = type.getDeclaredConstructor((Class[]) null);
-				ctor.setAccessible(true);
 			}
+			ctor.setAccessible(true);
 			final Constructor constructor = ctor;
 			return new ObjectInstantiator() {
 				@Override

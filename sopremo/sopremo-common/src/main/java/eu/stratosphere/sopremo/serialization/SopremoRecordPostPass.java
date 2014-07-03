@@ -200,6 +200,8 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 
 						MapDescriptor mapDescriptor = new MapDescriptor();
 						MapNode mapNode = new MapNode(new MapOperatorBase<IdentityMap>(IdentityMap.class, "dummy"));
+						mapNode.setDegreeOfParallelism(node.getDegreeOfParallelism());
+						mapNode.setSubtasksPerInstance(node.getSubtasksPerInstance());
 						SingleInputPlanNode dummyNode = mapDescriptor.instantiate(inMemoryChannel, mapNode);
 						inMemoryChannel.setTarget(dummyNode);
 						inMemoryChannel.setSerializer(new SopremoRecordSerializerFactory(SopremoRecordLayout.EMPTY, registry));
