@@ -15,7 +15,16 @@
 package eu.stratosphere.util;
 
 import static com.esotericsoftware.kryo.util.Util.className;
-import static com.esotericsoftware.reflectasm.shaded.org.objectweb.asm.Opcodes.*;
+import static com.esotericsoftware.reflectasm.shaded.org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static com.esotericsoftware.reflectasm.shaded.org.objectweb.asm.Opcodes.ACC_SUPER;
+import static com.esotericsoftware.reflectasm.shaded.org.objectweb.asm.Opcodes.ALOAD;
+import static com.esotericsoftware.reflectasm.shaded.org.objectweb.asm.Opcodes.ARETURN;
+import static com.esotericsoftware.reflectasm.shaded.org.objectweb.asm.Opcodes.DUP;
+import static com.esotericsoftware.reflectasm.shaded.org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static com.esotericsoftware.reflectasm.shaded.org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
+import static com.esotericsoftware.reflectasm.shaded.org.objectweb.asm.Opcodes.NEW;
+import static com.esotericsoftware.reflectasm.shaded.org.objectweb.asm.Opcodes.RETURN;
+import static com.esotericsoftware.reflectasm.shaded.org.objectweb.asm.Opcodes.V1_1;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -23,7 +32,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
 import org.objenesis.instantiator.ObjectInstantiator;
-import org.objenesis.strategy.InstantiatorStrategy;
 
 import com.esotericsoftware.kryo.DefaultSerializer;
 import com.esotericsoftware.kryo.Kryo;
@@ -64,7 +72,7 @@ public class SopremoKryo extends Kryo {
 	 * exception.
 	 */
 	@Override
-	@SuppressWarnings({ "rawtypes", "unchecked" }) 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected ObjectInstantiator newInstantiator(final Class type) {
 		if (!Util.isAndroid) {
 			// Use ReflectASM if the class is not a non-static member class.
@@ -114,9 +122,9 @@ public class SopremoKryo extends Kryo {
 	}
 }
 
-@SuppressWarnings({ "rawtypes", "unchecked" }) 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 abstract class ConstructorAccess<T> {
-	static public <T> ConstructorAccess<T> get(Class<T> type) {
+	static public synchronized <T> ConstructorAccess<T> get(Class<T> type) {
 		try {
 			type.getConstructor((Class[]) null);
 		} catch (Exception ex) {
@@ -132,51 +140,53 @@ abstract class ConstructorAccess<T> {
 		if (accessClassName.startsWith("java."))
 			accessClassName = "reflectasm." + accessClassName;
 		Class accessClass = null;
-		try {
-			accessClass = loader.loadClass(accessClassName);
-		} catch (ClassNotFoundException ignored) {
-		}
-		if (accessClass == null) {
-			String accessClassNameInternal = accessClassName.replace('.', '/');
-			String classNameInternal = className.replace('.', '/');
+		synchronized (ConstructorAccess.class) {
+			try {
+				accessClass = loader.loadClass(accessClassName);
+			} catch (ClassNotFoundException ignored) {
+			}
+			if (accessClass == null) {
+				String accessClassNameInternal = accessClassName.replace('.', '/');
+				String classNameInternal = className.replace('.', '/');
 
-			ClassWriter cw = new ClassWriter(0);
-			cw.visit(V1_1, ACC_PUBLIC + ACC_SUPER, accessClassNameInternal, null,
-				"com/esotericsoftware/reflectasm/ConstructorAccess", null);
-			MethodVisitor mv;
-			{
-				mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-				mv.visitCode();
-				mv.visitVarInsn(ALOAD, 0);
-				mv.visitMethodInsn(INVOKESPECIAL, "com/esotericsoftware/reflectasm/ConstructorAccess", "<init>", "()V");
-				mv.visitInsn(RETURN);
-				mv.visitMaxs(1, 1);
-				mv.visitEnd();
+				ClassWriter cw = new ClassWriter(0);
+				cw.visit(V1_1, ACC_PUBLIC + ACC_SUPER, accessClassNameInternal, null,
+					"com/esotericsoftware/reflectasm/ConstructorAccess", null);
+				MethodVisitor mv;
+				{
+					mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+					mv.visitCode();
+					mv.visitVarInsn(ALOAD, 0);
+					mv.visitMethodInsn(INVOKESPECIAL, "com/esotericsoftware/reflectasm/ConstructorAccess", "<init>", "()V");
+					mv.visitInsn(RETURN);
+					mv.visitMaxs(1, 1);
+					mv.visitEnd();
+				}
+				// fixed instantiiation for different classloaders
+				if (type.getClassLoader() == ClassLoader.getSystemClassLoader()) {
+					mv = cw.visitMethod(ACC_PUBLIC, "newInstance", "()Ljava/lang/Object;", null, null);
+					mv.visitCode();
+					mv.visitTypeInsn(NEW, classNameInternal);
+					mv.visitInsn(DUP);
+					mv.visitMethodInsn(INVOKESPECIAL, classNameInternal, "<init>", "()V");
+					mv.visitInsn(ARETURN);
+					mv.visitMaxs(2, 1);
+					mv.visitEnd();
+				} else {
+					mv = cw.visitMethod(ACC_PUBLIC, "newInstance", "()Ljava/lang/Object;", null, null);
+					mv.visitCode();
+					mv.visitLdcInsn(type);
+					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "newInstance", "()Ljava/lang/Object;");
+					mv.visitInsn(DUP);
+					mv.visitMethodInsn(INVOKESPECIAL, classNameInternal, "<init>", "()V");
+					mv.visitInsn(ARETURN);
+					mv.visitMaxs(2, 1);
+					mv.visitEnd();
+				}
+				cw.visitEnd();
+				byte[] data = cw.toByteArray();
+				accessClass = loader.defineClass(accessClassName, data);
 			}
-			// fixed instantiiation for different classloaders
-			if (type.getClassLoader() == ClassLoader.getSystemClassLoader()) {
-				mv = cw.visitMethod(ACC_PUBLIC, "newInstance", "()Ljava/lang/Object;", null, null);
-				mv.visitCode();
-				mv.visitTypeInsn(NEW, classNameInternal);
-				mv.visitInsn(DUP);
-				mv.visitMethodInsn(INVOKESPECIAL, classNameInternal, "<init>", "()V");
-				mv.visitInsn(ARETURN);
-				mv.visitMaxs(2, 1);
-				mv.visitEnd();
-			} else  {
-				mv = cw.visitMethod(ACC_PUBLIC, "newInstance", "()Ljava/lang/Object;", null, null);
-				mv.visitCode();
-				mv.visitLdcInsn(type);
-				mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "newInstance", "()Ljava/lang/Object;");
-				mv.visitInsn(DUP);
-				mv.visitMethodInsn(INVOKESPECIAL, classNameInternal, "<init>", "()V");
-				mv.visitInsn(ARETURN);
-				mv.visitMaxs(2, 1);
-				mv.visitEnd();
-			}
-			cw.visitEnd();
-			byte[] data = cw.toByteArray();
-			accessClass = loader.defineClass(accessClassName, data);
 		}
 		try {
 			return (ConstructorAccess) accessClass.newInstance();
@@ -188,7 +198,7 @@ abstract class ConstructorAccess<T> {
 	abstract public T newInstance();
 }
 
-@SuppressWarnings({ "rawtypes", "unchecked" }) 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 class AccessClassLoader extends ClassLoader {
 	static private final ArrayList<AccessClassLoader> accessClassLoaders = new ArrayList();
 
