@@ -3,7 +3,8 @@ package eu.stratosphere.sopremo.pact;
 import com.google.common.reflect.TypeToken;
 
 import eu.stratosphere.api.common.functions.AbstractFunction;
-import eu.stratosphere.api.common.functions.GenericMapper;
+import eu.stratosphere.api.common.functions.GenericCollectorMap;
+import eu.stratosphere.api.common.functions.GenericFlatMap;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.SopremoEnvironment;
@@ -19,7 +20,7 @@ import eu.stratosphere.util.Collector;
  * {@link IJsonNode}).
  */
 public abstract class GenericSopremoMap<In extends IJsonNode, Out extends IJsonNode> extends AbstractFunction implements
-		GenericMapper<SopremoRecord, SopremoRecord>, SopremoFunction {
+		GenericCollectorMap<SopremoRecord, SopremoRecord>, SopremoFunction {
 	private EvaluationContext context;
 
 	private JsonCollector<Out> collector;
@@ -73,5 +74,5 @@ public abstract class GenericSopremoMap<In extends IJsonNode, Out extends IJsonN
 	 * @param out
 	 *        a collector that collects all output nodes
 	 */
-	protected abstract void map(In value, JsonCollector<Out> out);;
+	protected abstract void map(In value, JsonCollector<Out> out);
 }

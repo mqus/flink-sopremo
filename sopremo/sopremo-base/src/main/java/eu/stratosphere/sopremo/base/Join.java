@@ -108,7 +108,7 @@ public class Join extends CompositeOperator<Join> {
 				final List<JsonStream> operatorInputs = twoSourceJoin.getInputs();
 
 				final JsonStream[] actualInputs = new JsonStream[2];
-				final List<Source> moduleInput = module.getInputs();
+				final List<? extends Source> moduleInput = module.getInputs();
 				for (int index = 0; index < 2; index++) {
 					final int inputIndex = moduleInput.indexOf(operatorInputs.get(index).getSource().getOperator());
 					actualInputs[index] = inputs[inputIndex];

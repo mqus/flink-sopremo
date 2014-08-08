@@ -83,17 +83,7 @@ public final class SopremoRecordComparator extends TypeComparator<SopremoRecord>
 		this.temp1.read(firstSource);
 		this.temp2.read(secondSource);
 
-		for (int index = 0; index < this.keyExpressionIndices.length; index++) {
-			final IJsonNode k1 = this.temp1.getKey(this.keyExpressionIndices[index], this.nodeCache1[index]);
-			final IJsonNode k2 = this.temp2.getKey(this.keyExpressionIndices[index], this.nodeCache2[index]);
-
-			final int comparison = k1.compareTo(k2);
-			if (DEBUG)
-				SopremoUtil.LOG.debug(String.format("compare: %s <=> %s = %d", k1, k2, comparison));
-			if (comparison != 0)
-				return this.ascending[index] ? comparison : -comparison;
-		}
-		return 0;
+		return compare(this.temp1, this.temp2);
 	}
 
 	/*
@@ -255,7 +245,8 @@ public final class SopremoRecordComparator extends TypeComparator<SopremoRecord>
 	 * eu.stratosphere.core.memory.DataInputView)
 	 */
 	@Override
-	public void readWithKeyDenormalization(final SopremoRecord record, final DataInputView source) throws IOException {
+	public SopremoRecord readWithKeyDenormalization(final SopremoRecord record, final DataInputView source) throws IOException {
+		return record;
 	}
 
 	/*
@@ -300,6 +291,24 @@ public final class SopremoRecordComparator extends TypeComparator<SopremoRecord>
 	 */
 	@Override
 	public void writeWithKeyNormalization(final SopremoRecord record, final DataOutputView target) throws IOException {
+	}
+
+	/* (non-Javadoc)
+	 * @see eu.stratosphere.api.common.typeutils.TypeComparator#compare(java.lang.Object, java.lang.Object)
+	 */
+	@Override
+	public int compare(SopremoRecord first, SopremoRecord second) {
+		for (int index = 0; index < this.keyExpressionIndices.length; index++) {
+			final IJsonNode k1 = first.getKey(this.keyExpressionIndices[index], this.nodeCache1[index]);
+			final IJsonNode k2 = second.getKey(this.keyExpressionIndices[index], this.nodeCache2[index]);
+
+			final int comparison = k1.compareTo(k2);
+			if (DEBUG)
+				SopremoUtil.LOG.debug(String.format("compare: %s <=> %s = %d", k1, k2, comparison));
+			if (comparison != 0)
+				return this.ascending[index] ? comparison : -comparison;
+		}
+		return 0;
 	}
 
 }

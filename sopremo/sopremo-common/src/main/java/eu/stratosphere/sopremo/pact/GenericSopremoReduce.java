@@ -5,7 +5,8 @@ import java.util.Iterator;
 import com.google.common.reflect.TypeToken;
 
 import eu.stratosphere.api.common.functions.AbstractFunction;
-import eu.stratosphere.api.common.functions.GenericReducer;
+import eu.stratosphere.api.common.functions.GenericCombine;
+import eu.stratosphere.api.common.functions.GenericGroupReduce;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.SopremoEnvironment;
@@ -23,7 +24,7 @@ import eu.stratosphere.util.Collector;
  * {@link IStreamNode} ).
  */
 public abstract class GenericSopremoReduce<Elem extends IJsonNode, Out extends IJsonNode> extends AbstractFunction
-		implements GenericReducer<SopremoRecord, SopremoRecord>, SopremoFunction {
+		implements GenericGroupReduce<SopremoRecord, SopremoRecord>, GenericCombine<SopremoRecord>, SopremoFunction {
 	private EvaluationContext context;
 
 	private JsonCollector<Out> collector;

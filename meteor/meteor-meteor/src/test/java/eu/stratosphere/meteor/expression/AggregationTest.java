@@ -18,11 +18,9 @@ import org.junit.Test;
 
 import eu.stratosphere.meteor.MeteorTest;
 import eu.stratosphere.sopremo.CoreFunctions;
-import eu.stratosphere.sopremo.aggregation.ArrayAccessAsAggregation;
 import eu.stratosphere.sopremo.base.Grouping;
 import eu.stratosphere.sopremo.base.Selection;
 import eu.stratosphere.sopremo.expressions.ArrayCreation;
-import eu.stratosphere.sopremo.expressions.BatchAggregationExpression;
 import eu.stratosphere.sopremo.expressions.ComparativeExpression;
 import eu.stratosphere.sopremo.expressions.ComparativeExpression.BinaryOperator;
 import eu.stratosphere.sopremo.expressions.ConstantExpression;

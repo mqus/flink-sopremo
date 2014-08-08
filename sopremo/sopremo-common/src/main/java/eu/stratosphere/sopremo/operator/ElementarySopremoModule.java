@@ -24,16 +24,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import eu.stratosphere.api.common.operators.FileDataSource;
-import eu.stratosphere.api.common.operators.GenericDataSink;
-import eu.stratosphere.api.common.operators.GenericDataSource;
-import eu.stratosphere.api.common.operators.util.OperatorUtil;
+import eu.stratosphere.api.common.operators.base.FileDataSourceBase;
+import eu.stratosphere.api.common.operators.base.GenericDataSinkBase;
+import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
+import eu.stratosphere.api.java.record.operators.GenericDataSink;
+import eu.stratosphere.pact.common.plan.OperatorUtil;
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.Schema;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.sopremo.io.Sink;
 import eu.stratosphere.sopremo.io.Source;
+import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.util.IdentityList;
 import eu.stratosphere.util.dag.GraphTraverseListener;
 import eu.stratosphere.util.dag.OneTimeTraverser;
@@ -79,11 +81,12 @@ public class ElementarySopremoModule extends SopremoModule {
 
 	/**
 	 * Assembles the Pacts of the contained Sopremo operators and returns a list of all Pact sinks. These sinks may
-	 * either be directly a {@link GenericDataSource} or an unconnected {@link eu.stratosphere.api.common.operators.Operator}.
+	 * either be directly a {@link GenericDataSource} or an unconnected
+	 * {@link eu.stratosphere.api.common.operators.Operator<?>}.
 	 * 
 	 * @return a list of Pact sinks
 	 */
-	public Collection<eu.stratosphere.api.common.operators.Operator> assemblePact() {
+	public Collection<eu.stratosphere.api.common.operators.Operator<?>> assemblePact() {
 		// if(layout == null)
 		// layout = SopremoRecordLayout.create(this.schema.getKeyExpressions());
 		return new PactAssembler().assemble();
@@ -148,50 +151,39 @@ public class ElementarySopremoModule extends SopremoModule {
 	}
 
 	/**
-	 * Helper class needed to assemble a Pact program from the {@link PactModule}s of several {@link eu.stratosphere.api.common.operators.Operator}s.
+	 * Helper class needed to assemble a Pact program from the {@link PactModule}s of several
+	 * {@link eu.stratosphere.api.common.operators.Operator<?>}s.
 	 */
 	private class PactAssembler {
 		private final Map<Operator<?>, PactModule> modules = new IdentityHashMap<Operator<?>, PactModule>();
 
-		private final Map<Operator<?>, List<List<eu.stratosphere.api.common.operators.Operator>>> operatorOutputs =
-			new IdentityHashMap<Operator<?>, List<List<eu.stratosphere.api.common.operators.Operator>>>();
+		private final Map<Operator<?>, List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>>> operatorOutputs =
+			new IdentityHashMap<Operator<?>, List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>>>();
 
-		public Collection<eu.stratosphere.api.common.operators.Operator> assemble() {
+		public Collection<eu.stratosphere.api.common.operators.Operator<?>> assemble() {
 			this.convertDAGToModules();
 
 			this.connectModules();
 
-			final List<eu.stratosphere.api.common.operators.Operator> pactSinks = this.findPACTSinks();
+			final List<eu.stratosphere.api.common.operators.Operator<?>> pactSinks = this.findPACTSinks();
 
 			return pactSinks;
 		}
 
-		private void addOutputtingPactInOperator(final Operator<?> operator,
-				final eu.stratosphere.api.common.operators.Operator o,
-				final List<eu.stratosphere.api.common.operators.Operator> connectedInputs) {
+		private eu.stratosphere.api.common.operators.Operator<SopremoRecord> traceOperatorInput(final Operator<?> operator,
+				final eu.stratosphere.api.common.operators.Operator<SopremoRecord> input) {
 			final int inputIndex =
-				new IdentityList<GenericDataSource<?>>(this.modules.get(operator).getInputs()).indexOf(o);
-			// final List<FileDataSource> inputPacts =
-			// this.modules.get(operator).getInputs();
-			// for (int index = 0; index < inputPacts.size(); index++)
-			// if (inputPacts.get(index) == o) {
-			// inputIndex = index;
-			// break;
-			// }
-
-			if (inputIndex >= operator.getInputs().size() || inputIndex == -1) {
-				connectedInputs.add(o);
-				return;
-			}
-
+				new IdentityList<GenericDataSourceBase<?, ?>>(this.modules.get(operator).getInputs()).indexOf(input);
+			
+			if (inputIndex >= operator.getInputs().size() || inputIndex == -1) 
+				return input;
+			
 			final Operator.Output inputSource = operator.getInputs().get(inputIndex).getSource();
-			final List<eu.stratosphere.api.common.operators.Operator> outputtingOperators =
-				this.operatorOutputs.get(inputSource.getOperator()).get(inputSource.getIndex());
-			for (final eu.stratosphere.api.common.operators.Operator outputtingOperator : outputtingOperators)
-				if (outputtingOperator instanceof FileDataSource && !(inputSource.getOperator() instanceof Source))
-					this.addOutputtingPactInOperator(inputSource.getOperator(), outputtingOperator, connectedInputs);
-				else
-					connectedInputs.add(outputtingOperator);
+			final eu.stratosphere.api.common.operators.Operator<SopremoRecord> outputtingOperator =
+				(eu.stratosphere.api.common.operators.Operator<SopremoRecord>) this.operatorOutputs.get(inputSource.getOperator()).get(inputSource.getIndex());
+			if (outputtingOperator instanceof FileDataSourceBase && !(inputSource.getOperator() instanceof Source))
+				return traceOperatorInput(inputSource.getOperator(), outputtingOperator);
+			return outputtingOperator;
 		}
 
 		private void connectModules() {
@@ -199,18 +191,12 @@ public class ElementarySopremoModule extends SopremoModule {
 				final Operator<?> operator = operatorModule.getKey();
 				final PactModule module = operatorModule.getValue();
 
-				for (final eu.stratosphere.api.common.operators.Operator contract : module.getReachableNodes()) {
-					final List<List<eu.stratosphere.api.common.operators.Operator>> inputLists =
-						OperatorUtil.getInputs(contract);
-					for (int listIndex = 0; listIndex < inputLists.size(); listIndex++) {
-						final List<eu.stratosphere.api.common.operators.Operator> connectedInputs =
-							new ArrayList<eu.stratosphere.api.common.operators.Operator>();
-						final List<eu.stratosphere.api.common.operators.Operator> inputs = inputLists.get(listIndex);
-						for (int inputIndex = 0; inputIndex < inputs.size(); inputIndex++)
-							this.addOutputtingPactInOperator(operator, inputs.get(inputIndex), connectedInputs);
-						inputLists.set(listIndex, connectedInputs);
-					}
-					OperatorUtil.setInputs(contract, inputLists);
+				for (final eu.stratosphere.api.common.operators.Operator<?> contract : module.getReachableNodes()) {
+					final List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>> inputs = OperatorUtil.getInputs(contract);
+
+					for (int inputIndex = 0; inputIndex < inputs.size(); inputIndex++)
+						inputs.set(inputIndex, traceOperatorInput(operator, inputs.get(inputIndex)));
+					OperatorUtil.setInputs(contract, inputs);
 				}
 			}
 		}
@@ -224,11 +210,11 @@ public class ElementarySopremoModule extends SopremoModule {
 						final PactModule module = node.asPactModule();
 
 						PactAssembler.this.modules.put(node, module);
-						final List<GenericDataSink> outputFunctions = module.getOutputs();
-						final List<List<eu.stratosphere.api.common.operators.Operator>> outputOperators =
-							new ArrayList<List<eu.stratosphere.api.common.operators.Operator>>();
-						for (final GenericDataSink sink : outputFunctions)
-							outputOperators.add(sink.getInputs());
+						final List<GenericDataSinkBase<SopremoRecord>> outputFunctions = module.getOutputs();
+						final List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>> outputOperators =
+							new ArrayList<eu.stratosphere.api.common.operators.Operator<SopremoRecord>>();
+						for (final GenericDataSinkBase<SopremoRecord> sink : outputFunctions)
+							outputOperators.add(sink.getInput());
 						PactAssembler.this.operatorOutputs.put(node, outputOperators);
 					}
 				});
@@ -237,15 +223,15 @@ public class ElementarySopremoModule extends SopremoModule {
 				module.validate();
 		}
 
-		private List<eu.stratosphere.api.common.operators.Operator> findPACTSinks() {
-			final List<eu.stratosphere.api.common.operators.Operator> pactSinks =
-				new ArrayList<eu.stratosphere.api.common.operators.Operator>();
+		private List<eu.stratosphere.api.common.operators.Operator<?>> findPACTSinks() {
+			final List<eu.stratosphere.api.common.operators.Operator<?>> pactSinks =
+				new ArrayList<eu.stratosphere.api.common.operators.Operator<?>>();
 			for (final Operator<?> sink : ElementarySopremoModule.this.getAllOutputs())
-				for (final GenericDataSink outputFunction : this.modules.get(sink).getAllOutputs())
+				for (final GenericDataSinkBase<?> outputFunction : this.modules.get(sink).getAllOutputs())
 					if (sink instanceof Sink)
 						pactSinks.add(outputFunction);
 					else
-						pactSinks.addAll(outputFunction.getInputs());
+						pactSinks.add(outputFunction.getInput());
 			return pactSinks;
 		}
 	}

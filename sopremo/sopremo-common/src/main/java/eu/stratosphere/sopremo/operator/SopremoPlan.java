@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.api.common.operators.GenericDataSink;
+import eu.stratosphere.api.common.operators.base.GenericDataSinkBase;
 import eu.stratosphere.sopremo.AbstractSopremoType;
 import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.SopremoEnvironment;
@@ -16,6 +16,7 @@ import eu.stratosphere.sopremo.io.Sink;
 import eu.stratosphere.sopremo.packages.DefaultTypeRegistry;
 import eu.stratosphere.sopremo.packages.ITypeRegistry;
 import eu.stratosphere.sopremo.serialization.PlanWithSopremoPostPass;
+import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.sopremo.serialization.SopremoRecordLayout;
 
 /**
@@ -64,7 +65,7 @@ public class SopremoPlan extends AbstractSopremoType implements Serializable {
 	 * @return the converted Pact plan
 	 */
 	public Plan asPactPlan() {
-		final Collection<GenericDataSink> sinks = this.checkForSinks(this.assemblePact());
+		final Collection<GenericDataSinkBase<SopremoRecord>> sinks = this.checkForSinks(this.assemblePact());
 		return new PlanWithSopremoPostPass(this.layout, this.typeRegistry, sinks);
 	}
 
@@ -75,7 +76,7 @@ public class SopremoPlan extends AbstractSopremoType implements Serializable {
 	 * 
 	 * @return a list of Pact sinks
 	 */
-	public Collection<eu.stratosphere.api.common.operators.Operator> assemblePact() {
+	public Collection<eu.stratosphere.api.common.operators.Operator<?>> assemblePact() {
 		final ElementarySopremoModule elementaryModule = this.module.asElementary();
 		this.layout = SopremoRecordLayout.create(elementaryModule.getSchema().getKeyExpressions());
 		SopremoEnvironment.getInstance().setLayout(this.layout);
@@ -203,10 +204,10 @@ public class SopremoPlan extends AbstractSopremoType implements Serializable {
 	 * Checks if all contracts are {@link GenericDataSink}s.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private Collection<GenericDataSink> checkForSinks(
-			final Collection<eu.stratosphere.api.common.operators.Operator> contracts) {
+	private Collection<GenericDataSinkBase<SopremoRecord>> checkForSinks(
+			final Collection<eu.stratosphere.api.common.operators.Operator<?>> contracts) {
 		for (final eu.stratosphere.api.common.operators.Operator contract : contracts)
-			if (!GenericDataSink.class.isInstance(contract))
+			if (!GenericDataSinkBase.class.isInstance(contract))
 				throw new IllegalStateException("Operator without connected sink detected " + contract);
 		return (Collection) contracts;
 	}

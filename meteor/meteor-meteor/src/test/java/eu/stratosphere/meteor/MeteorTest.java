@@ -15,7 +15,6 @@
 package eu.stratosphere.meteor;
 
 import java.io.File;
-import java.util.List;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,9 +24,9 @@ import junit.framework.AssertionFailedError;
 import org.junit.Assert;
 import org.junit.Ignore;
 
-import eu.stratosphere.sopremo.operator.Operator;
 import eu.stratosphere.sopremo.operator.SopremoPlan;
 import eu.stratosphere.sopremo.query.QueryParserException;
+import eu.stratosphere.sopremo.testing.SopremoTestUtil;
 
 /**
  */
@@ -84,12 +83,6 @@ public class MeteorTest {
 	 * @param actualPlan
 	 */
 	protected static void assertPlanEquals(final SopremoPlan expectedPlan, final SopremoPlan actualPlan) {
-		final List<Operator<?>> unmatchingOperators = actualPlan.getUnmatchingOperators(expectedPlan);
-		if (!unmatchingOperators.isEmpty())
-			if (unmatchingOperators.get(0).getClass() == unmatchingOperators.get(1).getClass())
-				Assert.fail("operators are different; expected: \n" + unmatchingOperators.get(1) + "\nbut was: \n"
-					+ unmatchingOperators.get(0));
-			else
-				Assert.fail("plans are different; expected: \n" + expectedPlan + "\nbut was: \n" + actualPlan);
+		SopremoTestUtil.assertPlanEquals(expectedPlan, actualPlan);
 	}
 }

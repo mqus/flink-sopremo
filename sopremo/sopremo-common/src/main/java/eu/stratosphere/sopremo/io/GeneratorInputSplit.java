@@ -40,8 +40,8 @@ public class GeneratorInputSplit extends GenericInputSplit {
 	public GeneratorInputSplit() {
 	}
 
-	public GeneratorInputSplit(final int num, final int start, final int end) {
-		super(num);
+	public GeneratorInputSplit(final int num, int total, final int start, final int end) {
+		super(num, total);
 		this.start = start;
 		this.end = end;
 	}
@@ -52,7 +52,7 @@ public class GeneratorInputSplit extends GenericInputSplit {
 	 */
 	@Override
 	public String toString() {
-		return "GeneratorInputSplit[" + this.number + "," + this.start + "," + this.end + "]";
+		return "GeneratorInputSplit[" + this.getSplitNumber() + "," + this.start + "," + this.end + "]";
 	}
 
 }

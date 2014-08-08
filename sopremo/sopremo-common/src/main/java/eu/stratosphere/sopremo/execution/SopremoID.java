@@ -14,7 +14,7 @@
  **********************************************************************************************************************/
 package eu.stratosphere.sopremo.execution;
 
-import eu.stratosphere.nephele.io.AbstractID;
+import eu.stratosphere.nephele.AbstractID;
 
 /**
  */
@@ -27,28 +27,12 @@ public class SopremoID extends AbstractID {
 	}
 
 	/**
-	 * Constructs a new Sopremo ID.
-	 * 
-	 * @param lowerPart
-	 *        the lower bytes of the ID
-	 * @param upperPart
-	 *        the higher bytes of the ID
-	 */
-	private SopremoID(final long lowerPart, final long upperPart) {
-		super(lowerPart, upperPart);
-	}
-
-	/**
 	 * Generates a new statistically unique Sopremo ID.
 	 * 
 	 * @return a new statistically unique Sopremo ID
 	 */
 	public static SopremoID generate() {
-
-		final long lowerPart = AbstractID.generateRandomBytes();
-		final long upperPart = AbstractID.generateRandomBytes();
-
-		return new SopremoID(lowerPart, upperPart);
+		return new SopremoID();
 	}
 
 }

@@ -123,7 +123,7 @@ public abstract class GraphModule<Node, InputNode extends Node, OutputNode exten
 	}
 
 	@Override
-	public List<OutputNode> getAllOutputs() {
+	public List<? extends OutputNode> getAllOutputs() {
 		if (this.internalOutputNodes.isEmpty())
 			return this.getOutputs();
 		final List<OutputNode> allOutputs = new ArrayList<OutputNode>(this.outputNodes);
@@ -137,7 +137,7 @@ public abstract class GraphModule<Node, InputNode extends Node, OutputNode exten
 	}
 
 	@Override
-	public List<InputNode> getInputs() {
+	public List<? extends InputNode> getInputs() {
 		return new ArrayList<InputNode>(this.inputNodes);
 	}
 
@@ -183,7 +183,7 @@ public abstract class GraphModule<Node, InputNode extends Node, OutputNode exten
 	}
 
 	@Override
-	public List<OutputNode> getOutputs() {
+	public List<? extends OutputNode> getOutputs() {
 		return new ArrayList<OutputNode>(this.outputNodes);
 	}
 

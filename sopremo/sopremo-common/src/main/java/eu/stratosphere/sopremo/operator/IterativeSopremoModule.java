@@ -25,13 +25,15 @@ import java.util.Set;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
-import eu.stratosphere.api.common.operators.BulkIteration;
-import eu.stratosphere.api.common.operators.DeltaIteration;
-import eu.stratosphere.api.common.operators.util.OperatorUtil;
+import eu.stratosphere.api.common.operators.base.BulkIterationBase;
+import eu.stratosphere.api.common.operators.base.DeltaIterationBase;
+import eu.stratosphere.pact.common.plan.OperatorUtil;
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
+import eu.stratosphere.sopremo.io.SopremoOperatorInfoHelper;
 import eu.stratosphere.sopremo.io.Source;
+import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.sopremo.serialization.SopremoRecordLayout;
 import eu.stratosphere.util.IdentityList;
 import eu.stratosphere.util.IdentitySet;
@@ -267,15 +269,15 @@ public class IterativeSopremoModule extends SopremoModule {
 		return successors;
 	}
 
-	private static void replace(final Iterable<? extends eu.stratosphere.api.common.operators.Operator> nodes,
-			final eu.stratosphere.api.common.operators.Operator toReplace,
-			final eu.stratosphere.api.common.operators.Operator replaceWith) {
-		for (final eu.stratosphere.api.common.operators.Operator operator : nodes) {
-			final List<List<eu.stratosphere.api.common.operators.Operator>> inputs = OperatorUtil.getInputs(operator);
-			for (final List<eu.stratosphere.api.common.operators.Operator> unionedInputs : inputs)
-				for (int index = 0; index < unionedInputs.size(); index++)
-					if (unionedInputs.get(index) == toReplace)
-						unionedInputs.set(index, replaceWith);
+	@SuppressWarnings("unchecked")
+	private static void replace(final Iterable<? extends eu.stratosphere.api.common.operators.Operator<?>> nodes,
+			final eu.stratosphere.api.common.operators.Operator<?> toReplace,
+			final eu.stratosphere.api.common.operators.Operator<?> replaceWith) {
+		for (final eu.stratosphere.api.common.operators.Operator<?> operator : nodes) {
+			final List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>> inputs = OperatorUtil.getInputs(operator);
+			for (int index = 0; index < inputs.size(); index++)
+				if (inputs.get(index) == toReplace)
+					inputs.set(index, (eu.stratosphere.api.common.operators.Operator<SopremoRecord>) replaceWith);
 			OperatorUtil.setInputs(operator, inputs);
 		}
 	}
@@ -329,12 +331,13 @@ public class IterativeSopremoModule extends SopremoModule {
 
 			if (this.module.nextWorkset == null) {
 				// not tested yet!
-				final BulkIteration bulkIteration = new BulkIteration();
+				final BulkIterationBase<SopremoRecord> bulkIteration =
+					new BulkIterationBase<SopremoRecord>(SopremoOperatorInfoHelper.unary());
 				bulkIteration.setDegreeOfParallelism(this.getDegreeOfParallelism());
 				bulkIteration.setMaximumNumberOfIterations(this.module.maxNumberOfIterations);
-				bulkIteration.setNextPartialSolution(stepModule.getOutput(0).getInputs().get(0));
+				bulkIteration.setNextPartialSolution(stepModule.getOutput(0).getInput());
 				if (this.module.terminationCriterion != null)
-					bulkIteration.setTerminationCriterion(stepModule.getOutput(1).getInputs().get(0));
+					bulkIteration.setTerminationCriterion(stepModule.getOutput(1).getInput());
 
 				iterationModule.getOutput(0).setInput(bulkIteration);
 				replace(stepModule.getReachableNodes(),
@@ -349,12 +352,13 @@ public class IterativeSopremoModule extends SopremoModule {
 				}
 			} else {
 				SopremoRecordLayout layout = SopremoEnvironment.getInstance().getLayout();
-				final DeltaIteration deltaIteration =
-					new DeltaIteration(this.getKeyIndices(layout, this.module.solutionSetKeyExpressions));
+				final DeltaIterationBase<SopremoRecord, SopremoRecord> deltaIteration =
+					new DeltaIterationBase<SopremoRecord, SopremoRecord>(SopremoOperatorInfoHelper.binary(),
+						this.getKeyIndices(layout, this.module.solutionSetKeyExpressions));
 				deltaIteration.setDegreeOfParallelism(this.getDegreeOfParallelism());
 				deltaIteration.setMaximumNumberOfIterations(this.module.maxNumberOfIterations);
-				deltaIteration.setSolutionSetDelta(stepModule.getOutput(0).getInputs().get(0));
-				deltaIteration.setNextWorkset(stepModule.getOutput(1).getInputs().get(0));
+				deltaIteration.setSolutionSetDelta(stepModule.getOutput(0).getInput());
+				deltaIteration.setNextWorkset(stepModule.getOutput(1).getInput());
 
 				iterationModule.getOutput(0).setInput(deltaIteration);
 				replace(stepModule.getReachableNodes(),

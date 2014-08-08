@@ -5,7 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import eu.stratosphere.api.common.io.InputFormat;
-import eu.stratosphere.api.common.operators.GenericDataSource;
+import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.expressions.ArrayCreation;
@@ -15,6 +15,7 @@ import eu.stratosphere.sopremo.operator.InputCardinality;
 import eu.stratosphere.sopremo.operator.Name;
 import eu.stratosphere.sopremo.operator.Property;
 import eu.stratosphere.sopremo.pact.SopremoUtil;
+import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.sopremo.type.IJsonNode;
 import eu.stratosphere.sopremo.type.NullNode;
 import eu.stratosphere.util.Equaler;
@@ -111,14 +112,16 @@ public class Source extends ElementaryOperator<Source> {
 	@Override
 	public PactModule asPactModule() {
 		final String name = this.getName();
-		GenericDataSource<?> contract;
+		GenericDataSourceBase<SopremoRecord, ?> contract;
 		if (this.isAdhoc()) {
-			contract = new GenericDataSource<GeneratorInputFormat>(
-				GeneratorInputFormat.class, String.format("Adhoc %s", name));
+			contract = new GenericDataSourceBase<SopremoRecord, GeneratorInputFormat>(
+				GeneratorInputFormat.class, SopremoOperatorInfoHelper.source(), String.format("Adhoc %s", name));
 			SopremoUtil.setObject(contract.getParameters(), GeneratorInputFormat.ADHOC_EXPRESSION_PARAMETER_KEY,
 				this.adhocExpression);
 		} else {
-			contract = new GenericDataSource<InputFormat<?, ?>>(this.format.getInputFormat(), name);
+			contract =
+				new GenericDataSourceBase<SopremoRecord, InputFormat<SopremoRecord, ?>>(this.format.getInputFormat(),
+					SopremoOperatorInfoHelper.source(), name);
 			this.format.configureForInput(contract.getParameters(), contract, this.inputPath);
 		}
 		final PactModule pactModule = new PactModule(0, 1);

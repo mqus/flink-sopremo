@@ -16,19 +16,26 @@
 package eu.stratosphere.sopremo.serialization;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 
 import eu.stratosphere.api.common.typeutils.TypeSerializer;
 import eu.stratosphere.core.memory.DataInputView;
 import eu.stratosphere.core.memory.DataOutputView;
+import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.packages.ITypeRegistry;
 
 /**
  * Implementation of the (de)serialization and copying logic for the {@link SopremoRecord}.
  */
 public class SopremoRecordSerializer extends TypeSerializer<SopremoRecord> {
-	private final SopremoRecordLayout layout;
+	private SopremoRecordLayout layout;
 
-	private final ITypeRegistry typeRegistry;
+	private ITypeRegistry typeRegistry;
 
 	private transient SopremoRecord writeRecord, readRecord;
 
@@ -40,6 +47,21 @@ public class SopremoRecordSerializer extends TypeSerializer<SopremoRecord> {
 			throw new NullPointerException();
 		this.layout = layout;
 		this.typeRegistry = typeRegistry;
+	}
+
+	private void readObject(ObjectInputStream ois) {
+		Input input = new Input(ois);
+		final Kryo kryo = SopremoEnvironment.getInstance().getEvaluationContext().getKryo();
+		this.layout = kryo.readObject(input, SopremoRecordLayout.class);
+		this.typeRegistry = (ITypeRegistry) kryo.readClassAndObject(input);
+	}
+
+	private void writeObject(ObjectOutputStream oos) {
+		final Output output = new Output(oos);
+		final Kryo kryo = SopremoEnvironment.getInstance().getEvaluationContext().getKryo();
+		kryo.writeObject(output, this.layout);
+		kryo.writeClassAndObject(output, this.typeRegistry);
+		output.flush();
 	}
 
 	/**
@@ -79,20 +101,12 @@ public class SopremoRecordSerializer extends TypeSerializer<SopremoRecord> {
 
 	/*
 	 * (non-Javadoc)
-	 * @see eu.stratosphere.sopremo.serialization.TypeAccessors#copyTo(java.lang.Object, java.lang.Object)
+	 * @see eu.stratosphere.api.common.typeutils.TypeSerializer#copy(java.lang.Object, java.lang.Object)
 	 */
 	@Override
-	public void copyTo(final SopremoRecord from, final SopremoRecord to) {
-		from.copyTo(to);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see eu.stratosphere.sopremo.serialization.TypeAccessors#createCopy(java.lang.Object)
-	 */
-	@Override
-	public SopremoRecord createCopy(final SopremoRecord from) {
-		return from.copy();
+	public SopremoRecord copy(SopremoRecord from, SopremoRecord reuse) {
+		from.copyTo(reuse);
+		return reuse;
 	}
 
 	/*
@@ -112,13 +126,14 @@ public class SopremoRecordSerializer extends TypeSerializer<SopremoRecord> {
 	 * eu.stratosphere.core.memory.DataInputViewV2)
 	 */
 	@Override
-	public void deserialize(final SopremoRecord record, final DataInputView source) throws IOException {
+	public SopremoRecord deserialize(final SopremoRecord record, final DataInputView source) throws IOException {
 		if (this.readRecord != record) {
 			this.readRecord = record;
 			this.readRecord.init(this.layout, this.typeRegistry);
 		}
 		record.read(source);
 		record.parseNode();
+		return record;
 	}
 
 	/*
@@ -142,5 +157,21 @@ public class SopremoRecordSerializer extends TypeSerializer<SopremoRecord> {
 			this.writeRecord.init(this.layout, this.typeRegistry);
 		}
 		record.write(target);
+	}
+
+	/* (non-Javadoc)
+	 * @see eu.stratosphere.api.common.typeutils.TypeSerializer#isImmutableType()
+	 */
+	@Override
+	public boolean isImmutableType() {
+		return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see eu.stratosphere.api.common.typeutils.TypeSerializer#isStateful()
+	 */
+	@Override
+	public boolean isStateful() {
+		return true;
 	}
 }

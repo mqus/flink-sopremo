@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 
 import com.google.common.collect.Lists;
 
-import eu.stratosphere.api.common.operators.GenericDataSource;
+import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.core.fs.FSDataInputStream;
 import eu.stratosphere.core.fs.FSDataOutputStream;
@@ -72,7 +72,7 @@ public class CsvFormat extends SopremoFormat {
 	 * eu.stratosphere.api.record.operators .GenericDataSource, java.lang.String)
 	 */
 	@Override
-	public void configureForInput(final Configuration configuration, final GenericDataSource<?> source,
+	public void configureForInput(final Configuration configuration, final GenericDataSourceBase<?, ?> source,
 			final String inputPath) {
 		this.configureDelimiter(inputPath);
 		super.configureForInput(configuration, source, inputPath);

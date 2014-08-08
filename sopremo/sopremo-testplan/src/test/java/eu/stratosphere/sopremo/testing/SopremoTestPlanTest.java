@@ -31,7 +31,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Test;
 import org.junit.internal.ArrayComparisonFailure;
 
-import eu.stratosphere.api.common.operators.base.ReduceOperatorBase.Combinable;
+import eu.stratosphere.api.java.record.operators.ReduceOperator.Combinable;
 import eu.stratosphere.sopremo.CoreFunctions;
 import eu.stratosphere.sopremo.EqualVerifyTest;
 import eu.stratosphere.sopremo.expressions.ConstantExpression;

@@ -49,8 +49,8 @@ public class InputFormatTest {
 
 		final List<IJsonNode> values = new ArrayList<IJsonNode>();
 		while (!inputFormat.reachedEnd()) {
-			final SopremoRecord record = new SopremoRecord();
-			if (inputFormat.nextRecord(record))
+			SopremoRecord record = new SopremoRecord();
+			if ((record = inputFormat.nextRecord(record)) != null)
 				values.add(record.getNode().clone());
 		}
 		inputFormat.close();

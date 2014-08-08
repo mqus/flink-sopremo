@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Set;
 
 import eu.stratosphere.api.common.io.OutputFormat;
-import eu.stratosphere.api.common.operators.GenericDataSink;
+import eu.stratosphere.api.common.operators.base.GenericDataSinkBase;
+import eu.stratosphere.api.common.operators.util.UserCodeClassWrapper;
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
@@ -110,7 +111,8 @@ public class Sink extends ElementaryOperator<Sink> {
 		final PactModule pactModule = new PactModule(1, 0);
 
 		final Class<? extends OutputFormat<SopremoRecord>> outputFormat = this.format.getOutputFormat();
-		final GenericDataSink contract = new GenericDataSink(outputFormat, this.getName());
+		final GenericDataSinkBase<SopremoRecord> contract = new GenericDataSinkBase<SopremoRecord>(
+			new UserCodeClassWrapper<OutputFormat<SopremoRecord>>(outputFormat), SopremoOperatorInfoHelper.sink(), this.getName());
 		this.format.configureForOutput(contract.getParameters(), this.outputPath);
 		SopremoEnvironment.getInstance().save(contract.getParameters());
 		contract.setDegreeOfParallelism(this.getDegreeOfParallelism());

@@ -45,13 +45,13 @@ public class JsonInputFormatTest {
 		final SopremoRecord record = new SopremoRecord();
 		for (int index = 1; index <= 5; index++) {
 			Assert.assertFalse("more pairs expected @ " + index, inputFormat.reachedEnd());
-			Assert.assertTrue("valid pair expected @ " + index, inputFormat.nextRecord(record));
+			Assert.assertTrue("valid pair expected @ " + index, inputFormat.nextRecord(record) != null);
 			Assert.assertEquals("other order expected", index,
 				((IntNode) ((IObjectNode) record.getNode()).get("id")).getIntValue());
 		}
 
 		if (!inputFormat.reachedEnd()) {
-			Assert.assertTrue("no more pairs but reachedEnd did not return false", inputFormat.nextRecord(record));
+			Assert.assertTrue("no more pairs but reachedEnd did not return false", inputFormat.nextRecord(record) != null);
 			Assert.fail("pair unexpected: " + record.getNode());
 		}
 	}
@@ -76,11 +76,11 @@ public class JsonInputFormatTest {
 		final SopremoRecord record = new SopremoRecord();
 
 		if (!inputFormat.reachedEnd())
-			if (!inputFormat.nextRecord(record))
+			if (inputFormat.nextRecord(record) == null)
 				Assert.fail("one value expected expected: " + record.getNode());
 
 		if (!inputFormat.reachedEnd()) {
-			Assert.assertTrue("no more values but reachedEnd did not return false", inputFormat.nextRecord(record));
+			Assert.assertTrue("no more values but reachedEnd did not return false", inputFormat.nextRecord(record) != null);
 			Assert.fail("value unexpected: " + record.getNode());
 		}
 
@@ -110,7 +110,7 @@ public class JsonInputFormatTest {
 
 		int count = 0;
 		while (!inputFormat.reachedEnd())
-			if (inputFormat.nextRecord(record))
+			if (inputFormat.nextRecord(record) != null)
 				count++;
 
 		Assert.assertEquals(22, count);

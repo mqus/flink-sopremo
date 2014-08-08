@@ -28,18 +28,22 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 
 import eu.stratosphere.api.common.io.InputFormat;
-import eu.stratosphere.api.common.operators.GenericDataSource;
+import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
+import eu.stratosphere.api.common.operators.util.UserCodeClassWrapper;
+import eu.stratosphere.api.java.record.operators.OperatorInfoHelper;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.core.fs.FileInputSplit;
 import eu.stratosphere.core.fs.FileStatus;
 import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.core.fs.Path;
 import eu.stratosphere.sopremo.io.SopremoFormat;
+import eu.stratosphere.sopremo.io.SopremoOperatorInfoHelper;
 import eu.stratosphere.sopremo.io.SopremoFormat.SopremoFileInputFormat;
 import eu.stratosphere.sopremo.io.Source;
 import eu.stratosphere.sopremo.operator.JsonStream;
 import eu.stratosphere.sopremo.operator.Operator;
 import eu.stratosphere.sopremo.operator.Operator.Output;
+import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.sopremo.type.ArrayNode;
 import eu.stratosphere.sopremo.type.IArrayNode;
 import eu.stratosphere.sopremo.type.IJsonNode;
@@ -150,8 +154,9 @@ public class JsonStreamExpression extends EvaluationExpression {
 			else {
 				final SopremoFormat format = source.getFormat();
 				final Configuration configuration = new Configuration();
-				final GenericDataSource<?> dataSource =
-					new GenericDataSource<InputFormat<?, ?>>(format.getInputFormat());
+				final GenericDataSourceBase<SopremoRecord, InputFormat<SopremoRecord, ?>> dataSource =
+					new GenericDataSourceBase<SopremoRecord, InputFormat<SopremoRecord, ?>>(format.getInputFormat(),
+						SopremoOperatorInfoHelper.source(), "Side");
 				format.configureForInput(configuration, dataSource, source.getInputPath());
 				try {
 					this.values = this.readValues(format, configuration, this.getInputs(source));

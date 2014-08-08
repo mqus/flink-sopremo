@@ -10,6 +10,8 @@ import java.util.List;
 
 import com.google.common.base.Predicates;
 
+import eu.stratosphere.api.common.operators.DualInputOperator;
+import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.common.operators.util.OperatorUtil;
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.base.join.AntiJoin;
@@ -28,6 +30,7 @@ import eu.stratosphere.sopremo.expressions.TransformFunction;
 import eu.stratosphere.sopremo.operator.Internal;
 import eu.stratosphere.sopremo.operator.Name;
 import eu.stratosphere.sopremo.operator.Property;
+import eu.stratosphere.sopremo.serialization.SopremoRecord;
 
 @Internal
 public class TwoSourceJoin extends TwoSourceJoinBase<TwoSourceJoin> {
@@ -87,8 +90,12 @@ public class TwoSourceJoin extends TwoSourceJoinBase<TwoSourceJoin> {
 			this.strategy.setDegreeOfParallelism(this.getDegreeOfParallelism());
 
 		final PactModule pactModule = this.strategy.asPactModule();
-		if (this.inverseInputs)
-			OperatorUtil.swapInputs(pactModule.getOutput(0).getInputs().get(0), 0, 1);
+		if (this.inverseInputs) {
+			DualInputOperator<SopremoRecord, SopremoRecord, ?, ?> joinOp = (DualInputOperator<SopremoRecord, SopremoRecord, ?, ?>) pactModule.getOutput(0).getInput();
+			Operator<SopremoRecord> temp = joinOp.getFirstInput();
+			joinOp.setFirstInput(joinOp.getSecondInput());
+			joinOp.setSecondInput(temp);
+		}
 		return pactModule;
 	}
 

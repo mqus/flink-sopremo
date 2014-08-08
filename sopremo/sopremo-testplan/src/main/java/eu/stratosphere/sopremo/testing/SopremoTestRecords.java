@@ -29,6 +29,7 @@ import eu.stratosphere.sopremo.serialization.SopremoRecordComparatorFactory;
 import eu.stratosphere.sopremo.serialization.SopremoRecordLayout;
 import eu.stratosphere.sopremo.serialization.SopremoRecordPairComparatorFactory;
 import eu.stratosphere.sopremo.serialization.SopremoRecordSerializerFactory;
+import eu.stratosphere.sopremo.serialization.SopremoTypeInfo;
 
 /**
  */
@@ -54,7 +55,9 @@ public class SopremoTestRecords extends GenericTestRecords<SopremoRecord> {
 		final boolean[] ascending = new boolean[keys.length];
 		Arrays.fill(ascending, true);
 		typeConfig =
-			new TypeConfig<SopremoRecord>(new SopremoRecordComparatorFactory(layout, typeRegistry, keys, ascending),
+			new TypeConfig<SopremoRecord>(
+				new SopremoTypeInfo(),
+				new SopremoRecordComparatorFactory(layout, typeRegistry, keys, ascending),
 				SopremoRecordPairComparatorFactory.get(),
 				new SopremoRecordSerializerFactory(layout, typeRegistry), typeStringifier,
 				new SopremoKeyExtractor(layout.getKeyExpressions().toArray(new EvaluationExpression[0])),

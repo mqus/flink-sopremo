@@ -14,11 +14,9 @@
  **********************************************************************************************************************/
 package eu.stratosphere.meteor.expression;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import eu.stratosphere.meteor.MeteorTest;
-import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.SecondOrderFunctions;
 import eu.stratosphere.sopremo.base.Grouping;
 import eu.stratosphere.sopremo.expressions.ArithmeticExpression;
@@ -64,7 +62,7 @@ public class SecondOrderFunctionTest extends MeteorTest {
 		final Sink sink = new Sink("file://output.json").withInputs(projection);
 		expectedPlan.setSinks(sink);
 
-		Assert.assertEquals("unexpectedPlan", expectedPlan, actualPlan);
+		assertPlanEquals(expectedPlan, actualPlan);
 	}
 
 	@Test
@@ -88,7 +86,7 @@ public class SecondOrderFunctionTest extends MeteorTest {
 		final Sink sink = new Sink("file://output.json").withInputs(projection);
 		expectedPlan.setSinks(sink);
 
-		Assert.assertEquals("unexpectedPlan", expectedPlan, actualPlan);
+		assertPlanEquals(expectedPlan, actualPlan);
 	}
 
 	@Test
@@ -113,7 +111,7 @@ public class SecondOrderFunctionTest extends MeteorTest {
 		final Sink sink = new Sink("file://output.json").withInputs(projection);
 		expectedPlan.setSinks(sink);
 
-		Assert.assertEquals("unexpectedPlan", expectedPlan, actualPlan);
+		assertPlanEquals(expectedPlan, actualPlan);
 	}
 
 	public static IJsonNode udfTest(final IJsonNode... nodes) {

@@ -92,7 +92,7 @@ public class GeneratorInputFormat extends GenericInputFormat<SopremoRecord> {
 		int end;
 		for (int i = 0; i < numInputSplits; i++) {
 			end = (i + 1) * this.numValues / numInputSplits;
-			inputSplits[i] = new GeneratorInputSplit(i, start, end);
+			inputSplits[i] = new GeneratorInputSplit(i, numInputSplits, start, end);
 			start = end;
 		}
 
@@ -110,13 +110,13 @@ public class GeneratorInputFormat extends GenericInputFormat<SopremoRecord> {
 	}
 
 	@Override
-	public boolean nextRecord(final SopremoRecord record) throws IOException {
+	public SopremoRecord nextRecord(final SopremoRecord record) throws IOException {
 		if (this.reachedEnd())
 			throw new IOException("End of input split is reached");
 
 		final IJsonNode value = this.valueIterator.next();
 		record.setNode(value);
-		return true;
+		return record;
 	}
 
 	/*

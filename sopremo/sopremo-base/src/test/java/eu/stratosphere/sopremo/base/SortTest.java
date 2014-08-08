@@ -93,6 +93,7 @@ public class SortTest extends SopremoOperatorTestBase<Sort> {
 			addValue("b").
 			addValue("a");
 
+		sopremoPlan.trace();
 		sopremoPlan.run();
 
 		final List<IJsonNode> expected = Lists.newArrayList(sopremoPlan.getInput(0));

@@ -36,13 +36,12 @@ public class DevNullOutputFormat implements OutputFormat<SopremoRecord> {
 	@Override
 	public void configure(Configuration parameters) {
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see eu.stratosphere.api.common.io.OutputFormat#open(int)
+	
+	/* (non-Javadoc)
+	 * @see eu.stratosphere.api.common.io.OutputFormat#open(int, int)
 	 */
 	@Override
-	public void open(int taskNumber) throws IOException {
+	public void open(int taskNumber, int numTasks) throws IOException {
 	}
 
 	/*

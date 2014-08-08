@@ -221,7 +221,7 @@ public class SopremoModule extends GraphModule<Operator<?>, Source, Sink> implem
 			final Operator<?> inputOperator = input.getSource().getOperator();
 			// check if the given output is directly connected to an input of the module
 			if (inputOperator instanceof Source) {
-				final List<Source> inputs = inputModule.getInputs();
+				final List<? extends Source> inputs = inputModule.getInputs();
 				for (int i = 0; i < inputs.size(); i++)
 					if (inputOperator == inputs.get(i)) {
 						final JsonStream inputStream = operator.getInput(index);
@@ -284,7 +284,7 @@ public class SopremoModule extends GraphModule<Operator<?>, Source, Sink> implem
 		 * @param inputs
 		 * @param outputs
 		 */
-		public ModuleOperator(final List<Source> inputs, final List<Sink> outputs) {
+		public ModuleOperator(final List<? extends Source> inputs, final List<? extends Sink> outputs) {
 			super(inputs.size(), outputs.size());
 			this.setInputs(inputs);
 			this.setOutputs(outputs);

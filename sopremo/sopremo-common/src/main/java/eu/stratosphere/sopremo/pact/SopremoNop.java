@@ -1,19 +1,17 @@
 package eu.stratosphere.sopremo.pact;
 
 import eu.stratosphere.api.common.functions.AbstractFunction;
-import eu.stratosphere.api.common.functions.GenericMapper;
+import eu.stratosphere.api.common.functions.GenericMap;
 import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.util.Collector;
 
-public class SopremoNop extends AbstractFunction implements GenericMapper<SopremoRecord, SopremoRecord> {
-
+public class SopremoNop extends AbstractFunction implements GenericMap<SopremoRecord, SopremoRecord> {
 	/*
 	 * (non-Javadoc)
-	 * @see eu.stratosphere.api.functions.GenericMapper#map(java.lang.Object,
-	 * eu.stratosphere.api.record.functions.Collector)
+	 * @see eu.stratosphere.api.common.functions.GenericMap#map(java.lang.Object)
 	 */
 	@Override
-	public void map(final SopremoRecord record, final Collector<SopremoRecord> out) throws Exception {
-		out.collect(record);
+	public SopremoRecord map(SopremoRecord record) throws Exception {
+		return record;
 	}
 }

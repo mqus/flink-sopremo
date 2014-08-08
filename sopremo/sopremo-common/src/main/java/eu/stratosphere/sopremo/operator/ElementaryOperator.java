@@ -14,23 +14,25 @@ import java.util.Set;
 
 import eu.stratosphere.api.common.functions.AbstractFunction;
 import eu.stratosphere.api.common.functions.Function;
-import eu.stratosphere.api.common.functions.GenericMapper;
 import eu.stratosphere.api.common.operators.Ordering;
 import eu.stratosphere.api.common.operators.base.CoGroupOperatorBase;
+import eu.stratosphere.api.common.operators.base.CollectorMapOperatorBase;
 import eu.stratosphere.api.common.operators.base.CrossOperatorBase;
+import eu.stratosphere.api.common.operators.base.FilterOperatorBase;
+import eu.stratosphere.api.common.operators.base.FlatMapOperatorBase;
+import eu.stratosphere.api.common.operators.base.GroupReduceOperatorBase;
 import eu.stratosphere.api.common.operators.base.JoinOperatorBase;
 import eu.stratosphere.api.common.operators.base.MapOperatorBase;
 import eu.stratosphere.api.common.operators.base.ReduceOperatorBase;
-import eu.stratosphere.api.common.operators.util.OperatorUtil;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.pact.common.IdentityMap;
+import eu.stratosphere.pact.common.plan.OperatorUtil;
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.sopremo.expressions.InputSelection;
 import eu.stratosphere.sopremo.expressions.OrderingExpression;
-import eu.stratosphere.sopremo.pact.SopremoCoGroupOperator;
-import eu.stratosphere.sopremo.pact.SopremoReduceOperator;
+import eu.stratosphere.sopremo.io.SopremoOperatorInfoHelper;
 import eu.stratosphere.sopremo.pact.SopremoUtil;
 import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.sopremo.serialization.SopremoRecordLayout;
@@ -69,10 +71,10 @@ import eu.stratosphere.util.IdentityList;
  * <ul>
  * <li>{@link #getFunctionClass()} allows to choose a different Function than the first inner class inheriting from
  * {@link Function}.
- * <li>{@link #getOperator(SopremoRecordLayout)} instantiates a contract matching the stub class resulting from the previous callback. This
- * callback is especially useful if a PACT stub is chosen that is not supported in Sopremo yet.
- * <li>{@link #configureOperator(eu.stratosphere.api.common.operators.Operator, Configuration)} is a callback used to set parameters of
- * the {@link Configuration} of the stub.
+ * <li>{@link #getOperator(SopremoRecordLayout)} instantiates a contract matching the stub class resulting from the
+ * previous callback. This callback is especially useful if a PACT stub is chosen that is not supported in Sopremo yet.
+ * <li>{@link #configureOperator(eu.stratosphere.api.common.operators.Operator, Configuration)} is a callback used to
+ * set parameters of the {@link Configuration} of the stub.
  * <li>{@link #asPactModule()} gives complete control over the creation of the {@link PactModule}.
  * </ul>
  */
@@ -95,7 +97,7 @@ public abstract class ElementaryOperator<Self extends ElementaryOperator<Self>>
 	}
 
 	private boolean combinable = false, combinableFirst = false, combinableSecond = false;
-	
+
 	private boolean removeTrivialInputSelections = false;
 
 	/**
@@ -143,7 +145,7 @@ public abstract class ElementaryOperator<Self extends ElementaryOperator<Self>>
 			this.getResultProjection().appendAsString(appendable);
 		}
 	}
-	
+
 	@Override
 	public ElementarySopremoModule asElementaryOperators() {
 		final ElementarySopremoModule module =
@@ -157,32 +159,32 @@ public abstract class ElementaryOperator<Self extends ElementaryOperator<Self>>
 			module.getOutput(index).setInput(index, outputs.get(index));
 		return module;
 	}
-	
+
 	public PactModule asPactModule() {
 		SopremoRecordLayout layout = SopremoEnvironment.getInstance().getLayout();
-		final eu.stratosphere.api.common.operators.Operator contract = this.getOperator(layout);
+		final eu.stratosphere.api.common.operators.Operator<SopremoRecord> contract = this.getOperator(layout);
 		SopremoEnvironment.getInstance().getEvaluationContext().setResultProjection(this.resultProjection);
 		this.configureOperator(contract, contract.getParameters());
 
-		final List<List<eu.stratosphere.api.common.operators.Operator>> inputLists = OperatorUtil
-			.getInputs(contract);
-		final List<eu.stratosphere.api.common.operators.Operator> distinctInputs =
-			new IdentityList<eu.stratosphere.api.common.operators.Operator>();
-		for (final List<eu.stratosphere.api.common.operators.Operator> inputs : inputLists) {
-			// assume at least one input for each contract input slot
-			if (inputs.isEmpty())
-				inputs.add(new MapOperatorBase<GenericMapper<SopremoRecord, SopremoRecord>>(IdentityMap.class, "nop"));
-			for (final eu.stratosphere.api.common.operators.Operator input : inputs)
-				if (!distinctInputs.contains(input))
-					distinctInputs.add(input);
-		}
-		final PactModule module = new PactModule(distinctInputs.size(), 1);
-		for (final List<eu.stratosphere.api.common.operators.Operator> inputs : inputLists)
-			for (int index = 0; index < inputs.size(); index++)
-				inputs.set(index, module.getInput(distinctInputs.indexOf(inputs.get(index))));
-		OperatorUtil.setInputs(contract, inputLists);
+		final List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>> inputs = OperatorUtil.getInputs(contract);
+		final List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>> distinctInputs =
+			new IdentityList<eu.stratosphere.api.common.operators.Operator<SopremoRecord>>();
 
-		module.getOutput(0).addInput(contract);
+		for (int index = 0; index < inputs.size(); index++) {
+			eu.stratosphere.api.common.operators.Operator<SopremoRecord> input = inputs.get(index);
+			if (input == null)
+				inputs.set(index, input = new MapOperatorBase<SopremoRecord, SopremoRecord, IdentityMap>(IdentityMap.class,
+					SopremoOperatorInfoHelper.unary(), "nop"));
+			if (!distinctInputs.contains(input))
+				distinctInputs.add(input);
+		}
+
+		final PactModule module = new PactModule(distinctInputs.size(), 1);
+		for (int index = 0; index < inputs.size(); index++)
+			inputs.set(index, module.getInput(distinctInputs.indexOf(inputs.get(index))));
+		OperatorUtil.setInputs(contract, inputs);
+
+		module.getOutput(0).setInput(contract);
 		return module;
 	}
 
@@ -406,7 +408,7 @@ public abstract class ElementaryOperator<Self extends ElementaryOperator<Self>>
 		this.setCombinable(combinable);
 		return this.self();
 	}
-	
+
 	/**
 	 * Sets the combinableFirst to the specified value. This method has only effects for CoGroup stubs.
 	 * 
@@ -585,31 +587,45 @@ public abstract class ElementaryOperator<Self extends ElementaryOperator<Self>>
 
 		final String name = this.toString();
 		try {
-			if (contractClass == ReduceOperatorBase.class) {
+			if (contractClass == MapOperatorBase.class)
+				return new MapOperatorBase(stubClass, SopremoOperatorInfoHelper.unary(), name);
+			else if (contractClass == CollectorMapOperatorBase.class)
+				return new CollectorMapOperatorBase(stubClass, SopremoOperatorInfoHelper.unary(), name);
+			else if (contractClass == FilterOperatorBase.class)
+				return new FilterOperatorBase(stubClass, SopremoOperatorInfoHelper.unary(), name);
+			else if (contractClass == FlatMapOperatorBase.class)
+				return new FlatMapOperatorBase(stubClass, SopremoOperatorInfoHelper.unary(), name);
+			else if (contractClass == ReduceOperatorBase.class) {
 				final int[] keyIndices = this.getKeyIndices(layout, this.getKeyExpressions(0));
-				final SopremoReduceOperator contract = new SopremoReduceOperator(this, stubClass, keyIndices, name);
+				final ReduceOperatorBase<?, ?> contract =
+					new ReduceOperatorBase(stubClass, SopremoOperatorInfoHelper.unary(), keyIndices, name);
 				if (!this.getInnerGroupOrder(0).isEmpty())
-					contract.setInnerGroupOrder(this.createOrdering(layout, this.getInnerGroupOrder(0)));
+					throw new UnsupportedOperationException();
+				return contract;
+			} else if (contractClass == GroupReduceOperatorBase.class) {
+				final int[] keyIndices = this.getKeyIndices(layout, this.getKeyExpressions(0));
+				final GroupReduceOperatorBase<?, ?, ?> contract =
+					new GroupReduceOperatorBase(stubClass, SopremoOperatorInfoHelper.unary(), keyIndices, name);
+				if (!this.getInnerGroupOrder(0).isEmpty())
+					contract.setGroupOrder(this.createOrdering(layout, this.getInnerGroupOrder(0)));
 				return contract;
 			} else if (contractClass == CoGroupOperatorBase.class) {
 				final int[] keyIndices1 = this.getKeyIndices(layout, this.getKeyExpressions(0));
 				final int[] keyIndices2 = this.getKeyIndices(layout, this.getKeyExpressions(1));
-				final SopremoCoGroupOperator contract =
-					new SopremoCoGroupOperator(this, stubClass, keyIndices1, keyIndices2, name);
+				final CoGroupOperatorBase<?, ?, ?, ?> contract =
+					new CoGroupOperatorBase(stubClass, SopremoOperatorInfoHelper.binary(), keyIndices1, keyIndices2, name);
 				if (!this.getInnerGroupOrder(0).isEmpty())
-					contract.setFirstInnerGroupOrdering(this.createOrdering(layout, this.getInnerGroupOrder(0)));
+					contract.setGroupOrderForInputOne(this.createOrdering(layout, this.getInnerGroupOrder(0)));
 				if (!this.getInnerGroupOrder(1).isEmpty())
-					contract.setSecondInnerGroupOrdering(this.createOrdering(layout, this.getInnerGroupOrder(1)));
+					contract.setGroupOrderForInputTwo(this.createOrdering(layout, this.getInnerGroupOrder(1)));
 				return contract;
 			} else if (contractClass == JoinOperatorBase.class) {
 				final int[] keyIndices1 = this.getKeyIndices(layout, this.getKeyExpressions(0));
 				final int[] keyIndices2 = this.getKeyIndices(layout, this.getKeyExpressions(1));
 
-				return new JoinOperatorBase(stubClass, keyIndices1, keyIndices2, name);
-			} else if (contractClass == MapOperatorBase.class)
-				return new MapOperatorBase(stubClass, name);
-			else if (contractClass == CrossOperatorBase.class)
-				return new CrossOperatorBase(stubClass, name);
+				return new JoinOperatorBase(stubClass, SopremoOperatorInfoHelper.binary(), keyIndices1, keyIndices2, name);
+			} else if (contractClass == CrossOperatorBase.class)
+				return new CrossOperatorBase(stubClass, SopremoOperatorInfoHelper.binary(), name);
 			else
 				throw new UnsupportedOperationException("Unknown contract type");
 
@@ -628,7 +644,8 @@ public abstract class ElementaryOperator<Self extends ElementaryOperator<Self>>
 		return this.removeTrivialInputSelections;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see eu.stratosphere.sopremo.operator.Operator#setNumberOfInputs(int, int)
 	 */
 	@Override
@@ -641,8 +658,9 @@ public abstract class ElementaryOperator<Self extends ElementaryOperator<Self>>
 
 	/**
 	 * Sets the removeTrivialInputSelections to the specified value.
-	 *
-	 * @param removeTrivialInputSelections the removeTrivialInputSelections to set
+	 * 
+	 * @param removeTrivialInputSelections
+	 *        the removeTrivialInputSelections to set
 	 */
 	protected void setRemoveTrivialInputSelections(boolean removeTrivialInputSelections) {
 		this.removeTrivialInputSelections = removeTrivialInputSelections;

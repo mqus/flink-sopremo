@@ -8,14 +8,16 @@ import org.junit.Test;
 import eu.stratosphere.api.common.functions.AbstractFunction;
 import eu.stratosphere.api.common.functions.Function;
 import eu.stratosphere.api.common.operators.SingleInputOperator;
-import eu.stratosphere.api.common.operators.base.MapOperatorBase;
+import eu.stratosphere.api.common.operators.base.CollectorMapOperatorBase;
+import eu.stratosphere.api.common.operators.base.GroupReduceOperatorBase;
 import eu.stratosphere.api.common.operators.util.UserCodeClassWrapper;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sopremo.expressions.ObjectAccess;
+import eu.stratosphere.sopremo.io.SopremoOperatorInfoHelper;
 import eu.stratosphere.sopremo.pact.JsonCollector;
 import eu.stratosphere.sopremo.pact.SopremoMap;
 import eu.stratosphere.sopremo.pact.SopremoReduce;
-import eu.stratosphere.sopremo.pact.SopremoReduceOperator;
+import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.sopremo.serialization.SopremoRecordLayout;
 import eu.stratosphere.sopremo.type.IJsonNode;
 import eu.stratosphere.sopremo.type.IStreamNode;
@@ -77,9 +79,9 @@ public class ElementaryOperatorTest {
 	@Test
 	public void getOperatorShouldReturnTheJoiningOperatorToTheFirstFunction() {
 		final SopremoRecordLayout layout = SopremoRecordLayout.create(new ObjectAccess("someField"));
-		final eu.stratosphere.api.common.operators.Operator contract =
+		final eu.stratosphere.api.common.operators.Operator<?> contract =
 			new OperatorWithTwoFunctions().getOperator(layout);
-		assertEquals(SopremoReduceOperator.class, contract.getClass());
+		assertEquals(GroupReduceOperatorBase.class, contract.getClass());
 		Class<?> userCodeClass = contract.getUserCodeWrapper().getUserCodeClass();
 		assertTrue(OperatorWithTwoFunctions.Implementation1.class == userCodeClass ||
 				OperatorWithTwoFunctions.Implementation2.class == userCodeClass);
@@ -87,15 +89,20 @@ public class ElementaryOperatorTest {
 
 	@Test
 	public void getOperatorShouldReturnTheJoiningOperatorToTheOnlyFunction() {
-		final eu.stratosphere.api.common.operators.Operator contract =
+		final eu.stratosphere.api.common.operators.Operator<?> contract =
 			new OperatorWithOneFunction().getOperator(LAYOUT);
-		assertEquals(MapOperatorBase.class, contract.getClass());
+		assertEquals(CollectorMapOperatorBase.class, contract.getClass());
 		assertEquals(OperatorWithOneFunction.Implementation.class, contract.getUserCodeWrapper().getUserCodeClass());
 	}
 
 	@InputCardinality(1)
 	static class OperatorWithInstanceFunction extends ElementaryOperator<OperatorWithInstanceFunction> {
 		class Implementation extends SopremoMap {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -1432298783370675271L;
+
 			/*
 			 * (non-Javadoc)
 			 * @see eu.stratosphere.sopremo.pact.SopremoMap#map(eu.stratosphere.sopremo.type.IJsonNode,
@@ -114,6 +121,11 @@ public class ElementaryOperatorTest {
 	@InputCardinality(1)
 	static class OperatorWithOneFunction extends ElementaryOperator<OperatorWithOneFunction> {
 		static class Implementation extends SopremoMap {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -3718992653568180670L;
+
 			/*
 			 * (non-Javadoc)
 			 * @see eu.stratosphere.sopremo.pact.SopremoMap#map(eu.stratosphere.sopremo.type.IJsonNode,
@@ -136,6 +148,11 @@ public class ElementaryOperatorTest {
 
 		static class Implementation1 extends SopremoReduce {
 
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -7637736977822009973L;
+
 			/*
 			 * (non-Javadoc)
 			 * @see eu.stratosphere.sopremo.pact.SopremoReduce#reduce(eu.stratosphere.sopremo.type.ArrayNode,
@@ -147,6 +164,11 @@ public class ElementaryOperatorTest {
 		}
 
 		static class Implementation2 extends SopremoReduce {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1363329925739280541L;
+
 			/*
 			 * (non-Javadoc)
 			 * @see eu.stratosphere.sopremo.pact.SopremoReduce#reduce(eu.stratosphere.sopremo.type.ArrayNode,
@@ -161,10 +183,10 @@ public class ElementaryOperatorTest {
 	@InputCardinality(1)
 	static class OperatorWithUninstantiableFunction extends ElementaryOperator<OperatorWithUnknownFunction> {
 		@InputCardinality(1)
-		static class UninstanceableOperator extends SingleInputOperator<Function> {
+		static class UninstanceableOperator extends SingleInputOperator<SopremoRecord, SopremoRecord, Function> {
 
 			public UninstanceableOperator(final Class<? extends Function> clazz, final String name) {
-				super(new UserCodeClassWrapper<Function>(clazz), name);
+				super(new UserCodeClassWrapper<Function>(clazz), SopremoOperatorInfoHelper.unary(), name);
 				throw new IllegalStateException("not instanceable");
 			}
 
@@ -174,6 +196,11 @@ public class ElementaryOperatorTest {
 	@InputCardinality(1)
 	static class OperatorWithUnknownFunction extends ElementaryOperator<OperatorWithUnknownFunction> {
 		static class Implementation extends AbstractFunction {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -7304059470706076297L;
 
 			/*
 			 * (non-Javadoc)

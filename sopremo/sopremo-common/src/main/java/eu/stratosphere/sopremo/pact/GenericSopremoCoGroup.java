@@ -66,37 +66,37 @@ public abstract class GenericSopremoCoGroup<LeftElem extends IJsonNode, RightEle
 		}
 	}
 
-	/**
-	 * This method must be overridden by CoGoup UDFs that want to make use of the combining feature
-	 * on their first input. In addition, the extending class must be annotated as CombinableFirst.
-	 * <p>
-	 * The use of the combiner is typically a pre-reduction of the data.
-	 * 
-	 * @param records
-	 *        The records to be combined.
-	 * @param out
-	 *        The collector to write the result to.
-	 */
-	@Override
-	public void combineFirst(final Iterator<SopremoRecord> records, final Collector<SopremoRecord> out) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * This method must be overridden by CoGoup UDFs that want to make use of the combining feature
-	 * on their second input. In addition, the extending class must be annotated as CombinableSecond.
-	 * <p>
-	 * The use of the combiner is typically a pre-reduction of the data.
-	 * 
-	 * @param records
-	 *        The records to be combined.
-	 * @param out
-	 *        The collector to write the result to.
-	 */
-	@Override
-	public void combineSecond(final Iterator<SopremoRecord> records, final Collector<SopremoRecord> out) {
-		throw new UnsupportedOperationException();
-	}
+//	/**
+//	 * This method must be overridden by CoGoup UDFs that want to make use of the combining feature
+//	 * on their first input. In addition, the extending class must be annotated as CombinableFirst.
+//	 * <p>
+//	 * The use of the combiner is typically a pre-reduction of the data.
+//	 * 
+//	 * @param records
+//	 *        The records to be combined.
+//	 * @param out
+//	 *        The collector to write the result to.
+//	 */
+//	@Override
+//	public void combineFirst(final Iterator<SopremoRecord> records, final Collector<SopremoRecord> out) {
+//		throw new UnsupportedOperationException();
+//	}
+//
+//	/**
+//	 * This method must be overridden by CoGoup UDFs that want to make use of the combining feature
+//	 * on their second input. In addition, the extending class must be annotated as CombinableSecond.
+//	 * <p>
+//	 * The use of the combiner is typically a pre-reduction of the data.
+//	 * 
+//	 * @param records
+//	 *        The records to be combined.
+//	 * @param out
+//	 *        The collector to write the result to.
+//	 */
+//	@Override
+//	public void combineSecond(final Iterator<SopremoRecord> records, final Collector<SopremoRecord> out) {
+//		throw new UnsupportedOperationException();
+//	}
 
 	@Override
 	public final EvaluationContext getContext() {

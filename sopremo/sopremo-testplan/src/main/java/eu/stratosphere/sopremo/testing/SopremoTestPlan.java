@@ -12,11 +12,12 @@ import java.util.Iterator;
 import java.util.List;
 
 import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.api.common.operators.FileDataSink;
-import eu.stratosphere.api.common.operators.FileDataSource;
-import eu.stratosphere.api.common.operators.GenericDataSink;
-import eu.stratosphere.api.common.operators.GenericDataSource;
+import eu.stratosphere.api.common.operators.base.FileDataSinkBase;
+import eu.stratosphere.api.common.operators.base.FileDataSourceBase;
+import eu.stratosphere.api.common.operators.base.GenericDataSinkBase;
+import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
 import eu.stratosphere.configuration.Configuration;
+import eu.stratosphere.configuration.GlobalConfiguration;
 import eu.stratosphere.core.fs.FSDataInputStream;
 import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.core.fs.Path;
@@ -39,6 +40,7 @@ import eu.stratosphere.sopremo.operator.Operator;
 import eu.stratosphere.sopremo.operator.OperatorNavigator;
 import eu.stratosphere.sopremo.operator.SopremoModule;
 import eu.stratosphere.sopremo.operator.SopremoPlan;
+import eu.stratosphere.sopremo.packages.DefaultTypeRegistry;
 import eu.stratosphere.sopremo.packages.ITypeRegistry;
 import eu.stratosphere.sopremo.pact.SopremoUtil;
 import eu.stratosphere.sopremo.pact.UntypedRecordToJsonIterator;
@@ -101,6 +103,8 @@ public class SopremoTestPlan {
 	private boolean trace;
 
 	private int dop = -1;
+	
+	private static final TypeConfig<SopremoRecord> EMPTY_CONFIG = SopremoTestRecords.getTypeConfig(SopremoRecordLayout.create(), new DefaultTypeRegistry());
 
 	/**
 	 * Initializes a SopremoTestPlan with the given number of in/outputs. All inputs are initialized with {@link Input}s
@@ -352,7 +356,7 @@ public class SopremoTestPlan {
 	 */
 	public void run() {
 		final SopremoPlan sopremoPlan = this.getSopremoPlan();
-		final Collection<eu.stratosphere.api.common.operators.Operator> sinks = sopremoPlan.assemblePact();
+		final Collection<eu.stratosphere.api.common.operators.Operator<?>> sinks = sopremoPlan.assemblePact();
 		final SopremoRecordLayout layout = sopremoPlan.getLayout();
 		final ITypeRegistry typeRegistry = sopremoPlan.getTypeRegistry();
 		this.testPlan = new SopremoRecordTestPlan(layout, typeRegistry, sinks);
@@ -549,7 +553,7 @@ public class SopremoTestPlan {
 
 		private int findSinkIndex(final GenericTestPlan<SopremoRecord, SopremoTestRecords> testPlan) {
 			int sinkIndex = -1;
-			final List<GenericDataSink> sinks = testPlan.getSinks();
+			final List<GenericDataSinkBase<SopremoRecord>> sinks = testPlan.getSinks();
 			for (int index = 0; index < sinks.size(); index++)
 				if (sinks.get(index).getName().equals(this.getOperator().getInputPath())) {
 					sinkIndex = index;
@@ -582,7 +586,7 @@ public class SopremoTestPlan {
 
 		public int getSourceIndex(final GenericTestPlan<SopremoRecord, SopremoTestRecords> testPlan) {
 			int sourceIndex = -1;
-			final List<GenericDataSource<?>> sources = testPlan.getSources();
+			final List<GenericDataSourceBase<?, ?>> sources = testPlan.getSources();
 			for (int index = 0; index < sources.size(); index++)
 				if (sources.get(index).getName().equals(this.getOperator().getInputPath())) {
 					sourceIndex = index;
@@ -652,8 +656,8 @@ public class SopremoTestPlan {
 		@Override
 		public PactModule asPactModule() {
 			final PactModule pactModule = new PactModule(1, 0);
-			final FileDataSink contract = GenericTestPlan.createDefaultSink(this.getOutputPath(), null);
-			contract.setInput(pactModule.getInput(0));
+			final FileDataSinkBase<SopremoRecord> contract = GenericTestPlan.createDefaultSink(this.getOutputPath(), EMPTY_CONFIG);
+			contract.setInput((eu.stratosphere.api.common.operators.Operator<SopremoRecord>) pactModule.getInput(0));
 			pactModule.addInternalOutput(contract);
 			SopremoEnvironment.getInstance().save(contract.getParameters());
 			return pactModule;
@@ -712,11 +716,12 @@ public class SopremoTestPlan {
 			this.index = 0;
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public PactModule asPactModule() {
 			final PactModule pactModule = new PactModule(0, 1);
-			final FileDataSource contract = GenericTestPlan.createDefaultSource(this.getInputPath(), null);
-			pactModule.getOutput(0).setInput(contract);
+			final FileDataSourceBase<?> contract = GenericTestPlan.createDefaultSource(this.getInputPath(), EMPTY_CONFIG);
+			((GenericDataSinkBase<SopremoRecord>) pactModule.getOutput(0)).setInput((eu.stratosphere.api.common.operators.Operator<SopremoRecord>) contract);
 			SopremoEnvironment.getInstance().save(contract.getParameters());
 			return pactModule;
 		}
@@ -755,8 +760,9 @@ public class SopremoTestPlan {
 		private final ITypeRegistry typeRegistry;
 
 		protected SopremoRecordTestPlan(final SopremoRecordLayout layout, final ITypeRegistry typeRegistry,
-				final Collection<? extends eu.stratosphere.api.common.operators.Operator> contracts) {
+				final Collection<? extends eu.stratosphere.api.common.operators.Operator<?>> contracts) {
 			super(SopremoTestRecords.getTypeConfig(SopremoRecordPostPass.PRUNE_LAYOUT ? SopremoRecordLayout.create() : layout, typeRegistry), contracts);
+//			super(, contracts);
 			this.layout = layout;
 			this.typeRegistry = typeRegistry;
 		}
@@ -769,13 +775,13 @@ public class SopremoTestPlan {
 		public String toString() {
 			return PactModule.valueOf(this.getSinks()).toString();
 		}
-
+		
 		/*
 		 * (non-Javadoc)
 		 * @see eu.stratosphere.core.testing.GenericTestPlan#createPlan(java.util.Collection)
 		 */
 		@Override
-		protected Plan createPlan(final Collection<GenericDataSink> wrappedSinks) {
+		protected Plan createPlan(final Collection<GenericDataSinkBase<SopremoRecord>> wrappedSinks) {
 			return new PlanWithSopremoPostPass(this.layout, this.typeRegistry, wrappedSinks);
 		}
 

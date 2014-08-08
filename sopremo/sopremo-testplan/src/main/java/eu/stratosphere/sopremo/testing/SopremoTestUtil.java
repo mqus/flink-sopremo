@@ -52,11 +52,11 @@ public class SopremoTestUtil {
 
 		final List<Operator<?>> unmatchingOperators = actualPlan.getUnmatchingOperators(expectedPlan);
 		if (!unmatchingOperators.isEmpty())
-			if (unmatchingOperators.get(0).getClass() == unmatchingOperators.get(1).getClass())
+			if (unmatchingOperators.get(0).getClass().getName().equals(unmatchingOperators.get(1).getClass().getName()))
 				Assert.fail("operators are different\nexpected: " + unmatchingOperators.get(1) + "\nbut was: " +
 					unmatchingOperators.get(0));
 			else
-				Assert.fail("plans are different\nexpected: " + expectedPlan + "\nbut was: " + actualPlan);
+				Assert.fail("plans are different\nexpected: " + expectedPlan + "\nbut was: " + actualPlan + "\nunmatched: " + unmatchingOperators);
 	}
 
 	public static SopremoPlan transferToClassManager(SopremoPlan actualPlan, final Kryo kryo) {

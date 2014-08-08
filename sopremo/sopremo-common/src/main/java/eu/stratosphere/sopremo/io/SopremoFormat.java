@@ -28,7 +28,7 @@ import eu.stratosphere.api.common.io.FileOutputFormat;
 import eu.stratosphere.api.common.io.InputFormat;
 import eu.stratosphere.api.common.io.OutputFormat;
 import eu.stratosphere.api.common.io.statistics.BaseStatistics;
-import eu.stratosphere.api.common.operators.GenericDataSource;
+import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.core.fs.FSDataInputStream;
 import eu.stratosphere.core.fs.FSDataOutputStream;
@@ -36,6 +36,7 @@ import eu.stratosphere.core.fs.FileInputSplit;
 import eu.stratosphere.core.fs.FileStatus;
 import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.core.fs.Path;
+import eu.stratosphere.core.fs.FileSystem.WriteMode;
 import eu.stratosphere.core.io.InputSplit;
 import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.SopremoEnvironment;
@@ -63,6 +64,8 @@ public abstract class SopremoFormat extends ConfigurableSopremoType {
 	private String encoding = "utf-8";
 
 	private EvaluationExpression projection = EvaluationExpression.VALUE;
+
+	private WriteMode writeMode = WriteMode.OVERWRITE;
 
 	/*
 	 * (non-Javadoc)
@@ -105,7 +108,7 @@ public abstract class SopremoFormat extends ConfigurableSopremoType {
 		return (SopremoFormat) super.clone();
 	}
 
-	public void configureForInput(final Configuration configuration, final GenericDataSource<?> source,
+	public void configureForInput(final Configuration configuration, final GenericDataSourceBase<?, ?> source,
 			final String inputPath) {
 		final Class<? extends SopremoInputFormat<?>> inputFormat = this.getInputFormat();
 		if (inputPath != null)
@@ -127,6 +130,30 @@ public abstract class SopremoFormat extends ConfigurableSopremoType {
 
 		SopremoUtil.transferFieldsToConfiguration(this, SopremoFormat.class, configuration,
 			outputFormat, OutputFormat.class);
+	}
+
+	/**
+	 * Sets the writeMode to the specified value.
+	 * 
+	 * @param writeMode
+	 *        the writeMode to set
+	 */
+	@Property
+	@Name(noun = { "writeMode", "mode" })
+	public void setWriteMode(WriteMode writeMode) {
+		if (writeMode == null)
+			throw new NullPointerException("writeMode must not be null");
+
+		this.writeMode = writeMode;
+	}
+
+	/**
+	 * Returns the writeMode.
+	 * 
+	 * @return the writeMode
+	 */
+	public WriteMode getWriteMode() {
+		return this.writeMode;
 	}
 
 	// protected void configure(final Configuration parameters) {
@@ -281,17 +308,17 @@ public abstract class SopremoFormat extends ConfigurableSopremoType {
 		}
 
 		@Override
-		public boolean nextRecord(final SopremoRecord record) throws IOException {
+		public SopremoRecord nextRecord(final SopremoRecord record) throws IOException {
 			if (!this.end) {
 				final IJsonNode value = this.nextValue();
 				if (SopremoUtil.DEBUG && SopremoUtil.LOG.isTraceEnabled())
 					SopremoUtil.LOG.trace(String.format("%s input %s",
 						SopremoEnvironment.getInstance().getEvaluationContext().getOperatorDescription(), value));
 				record.setNode(this.projection.evaluate(value));
-				return true;
+				return record;
 			}
 
-			return false;
+			return null;
 		}
 
 		/*
@@ -377,7 +404,7 @@ public abstract class SopremoFormat extends ConfigurableSopremoType {
 		}
 
 		@Override
-		public boolean nextRecord(final SopremoRecord record) throws IOException {
+		public SopremoRecord nextRecord(final SopremoRecord record) throws IOException {
 			if (!this.end) {
 				final IJsonNode value = this.nextValue();
 				if (value != null) {
@@ -385,11 +412,11 @@ public abstract class SopremoFormat extends ConfigurableSopremoType {
 						SopremoUtil.LOG.trace(String.format("%s input %s",
 							SopremoEnvironment.getInstance().getEvaluationContext().getOperatorDescription(), value));
 					record.setNode(this.projection.evaluate(value));
-					return true;
+					return record;
 				}
 			}
 
-			return false;
+			return null;
 		}
 
 		/*
@@ -490,8 +517,8 @@ public abstract class SopremoFormat extends ConfigurableSopremoType {
 		 * @see eu.stratosphere.api.io .FileOutputFormat#open(int)
 		 */
 		@Override
-		public void open(final int taskNumber) throws IOException {
-			super.open(taskNumber);
+		public void open(int taskNumber, int numTasks) throws IOException {
+			super.open(taskNumber, numTasks);
 
 			this.open(this.stream, taskNumber);
 		}

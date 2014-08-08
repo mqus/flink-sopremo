@@ -33,7 +33,7 @@ public interface SubGraph<Node, InputNode extends Node, OutputNode extends Node>
 	 * 
 	 * @return all output nodes
 	 */
-	public abstract List<OutputNode> getAllOutputs();
+	public abstract List<? extends OutputNode> getAllOutputs();
 
 	/**
 	 * Returns the input at the specified position.
@@ -49,7 +49,7 @@ public interface SubGraph<Node, InputNode extends Node, OutputNode extends Node>
 	 * 
 	 * @return all inputs
 	 */
-	public abstract List<InputNode> getInputs();
+	public abstract List<? extends InputNode> getInputs();
 
 	/**
 	 * Returns the internal output at the specified position.
@@ -88,7 +88,7 @@ public interface SubGraph<Node, InputNode extends Node, OutputNode extends Node>
 	 * 
 	 * @return all outputs
 	 */
-	public abstract List<OutputNode> getOutputs();
+	public abstract List<? extends OutputNode> getOutputs();
 
 	/**
 	 * Returns all nodes that are either (internal) output nodes or included in

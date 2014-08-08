@@ -13,7 +13,7 @@
 
 	<groupId>eu.stratosphere</groupId>
 	<artifactId>hll</artifactId>
-	<version>0.4.3-SNAPSHOT</version>
+	<version>0.5-SNAPSHOT</version>
 
 	<name>hll</name>
 	<packaging>pom</packaging>
@@ -51,8 +51,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<core.version>0.4-iterpatch</core.version>
-		<stratosphere-testing.version>0.4.3-SNAPSHOT</stratosphere-testing.version>
+		<core.version>0.5.2-SNAPSHOT</core.version>
+		<stratosphere-testing.version>0.5-SNAPSHOT</stratosphere-testing.version>
 	</properties>
 
 	<dependencies>
@@ -261,7 +261,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.7</version>
 				<configuration>
-					<argLine>-Xms512m -Xmx512m</argLine>
+					<argLine>-Xmx1024m -XX:+HeapDumpOnOutOfMemoryError</argLine>
 				</configuration>
 			</plugin>
 			<plugin>

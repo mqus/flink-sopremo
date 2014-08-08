@@ -34,7 +34,7 @@ public class Difference extends CompositeOperator<Difference> {
 	@Override
 	public void addImplementation(final SopremoModule module) {
 		final Source leftInput = module.getInput(0);
-		final List<Source> otherInputs = module.getInputs().subList(1, module.getInputs().size());
+		final List<? extends Source> otherInputs = module.getInputs().subList(1, module.getInputs().size());
 		if (otherInputs.isEmpty())
 			module.embed(new Unique().withInputs(leftInput));
 		else {

@@ -14,7 +14,6 @@
  **********************************************************************************************************************/
 package eu.stratosphere.meteor.expression;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import eu.stratosphere.meteor.MeteorTest;
@@ -52,7 +51,7 @@ public class FunctionTest extends MeteorTest {
 		final Sink sink = new Sink("file://output.json").withInputs(projection);
 		expectedPlan.setSinks(sink);
 
-		Assert.assertEquals("unexpectedPlan", expectedPlan, actualPlan);
+		assertPlanEquals(expectedPlan, actualPlan);
 	}
 
 	@Test
@@ -74,7 +73,7 @@ public class FunctionTest extends MeteorTest {
 		final Sink sink = new Sink("file://output.json").withInputs(projection);
 		expectedPlan.setSinks(sink);
 
-		Assert.assertEquals("unexpectedPlan", expectedPlan, actualPlan);
+		assertPlanEquals(expectedPlan, actualPlan);
 	}
 
 	public static IJsonNode udfTest(final IJsonNode... nodes) {
