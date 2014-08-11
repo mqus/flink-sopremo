@@ -21,8 +21,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
-import eu.stratosphere.compiler.postpass.AbstractSchema;
-import eu.stratosphere.compiler.postpass.ConflictingFieldTypeInfoException;
+import org.apache.flink.compiler.postpass.AbstractSchema;
+import org.apache.flink.compiler.postpass.ConflictingFieldTypeInfoException;
+
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.util.CollectionUtil;
 

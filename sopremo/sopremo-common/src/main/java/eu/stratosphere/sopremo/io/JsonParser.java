@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import eu.stratosphere.core.fs.FSDataInputStream;
+import org.apache.flink.core.fs.FSDataInputStream;
+
 import eu.stratosphere.sopremo.type.ArrayNode;
 import eu.stratosphere.sopremo.type.BigIntegerNode;
 import eu.stratosphere.sopremo.type.BooleanNode;

@@ -9,7 +9,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import eu.stratosphere.core.fs.Path;
+import org.apache.flink.core.fs.Path;
+
 import eu.stratosphere.sopremo.aggregation.Aggregation;
 import eu.stratosphere.sopremo.aggregation.AssociativeAggregation;
 import eu.stratosphere.sopremo.aggregation.FixedTypeAssociativeAggregation;

@@ -17,9 +17,10 @@ package eu.stratosphere.sopremo.serialization;
 
 import java.util.Arrays;
 
-import eu.stratosphere.api.common.typeutils.TypeComparator;
-import eu.stratosphere.api.common.typeutils.TypeComparatorFactory;
-import eu.stratosphere.configuration.Configuration;
+import org.apache.flink.api.common.typeutils.TypeComparator;
+import org.apache.flink.api.common.typeutils.TypeComparatorFactory;
+import org.apache.flink.configuration.Configuration;
+
 import eu.stratosphere.sopremo.packages.ITypeRegistry;
 import eu.stratosphere.sopremo.pact.SopremoUtil;
 

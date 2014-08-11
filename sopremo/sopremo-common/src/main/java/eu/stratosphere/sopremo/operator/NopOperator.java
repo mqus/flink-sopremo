@@ -14,7 +14,8 @@
  **********************************************************************************************************************/
 package eu.stratosphere.sopremo.operator;
 
-import eu.stratosphere.api.common.functions.Function;
+import org.apache.flink.api.common.functions.Function;
+
 import eu.stratosphere.sopremo.pact.SopremoNop;
 
 /**

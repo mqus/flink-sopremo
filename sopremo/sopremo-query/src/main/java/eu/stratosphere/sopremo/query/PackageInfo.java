@@ -25,6 +25,8 @@ import java.util.Queue;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.apache.flink.util.StringUtils;
+
 import eu.stratosphere.sopremo.AbstractSopremoType;
 import eu.stratosphere.sopremo.ISopremoType;
 import eu.stratosphere.sopremo.io.SopremoFormat;
@@ -40,7 +42,6 @@ import eu.stratosphere.sopremo.packages.IFunctionRegistry;
 import eu.stratosphere.sopremo.packages.ITypeRegistry;
 import eu.stratosphere.sopremo.packages.NameChooserProvider;
 import eu.stratosphere.sopremo.type.IJsonNode;
-import eu.stratosphere.util.StringUtils;
 import eu.stratosphere.util.reflect.ReflectUtil;
 
 /**

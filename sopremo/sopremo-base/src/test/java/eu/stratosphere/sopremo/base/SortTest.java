@@ -20,12 +20,12 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.flink.api.common.operators.Order;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-import eu.stratosphere.api.common.operators.Order;
 import eu.stratosphere.sopremo.expressions.ArrayAccess;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.sopremo.expressions.OrderingExpression;

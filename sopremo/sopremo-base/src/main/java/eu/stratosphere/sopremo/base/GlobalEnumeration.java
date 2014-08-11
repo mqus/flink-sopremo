@@ -2,8 +2,9 @@ package eu.stratosphere.sopremo.base;
 
 import java.io.IOException;
 
-import eu.stratosphere.api.common.operators.Operator;
-import eu.stratosphere.configuration.Configuration;
+import org.apache.flink.api.common.operators.Operator;
+import org.apache.flink.configuration.Configuration;
+
 import eu.stratosphere.sopremo.AbstractSopremoType;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.sopremo.expressions.ObjectAccess;
@@ -14,7 +15,13 @@ import eu.stratosphere.sopremo.operator.Name;
 import eu.stratosphere.sopremo.operator.Property;
 import eu.stratosphere.sopremo.pact.JsonCollector;
 import eu.stratosphere.sopremo.pact.SopremoMap;
-import eu.stratosphere.sopremo.type.*;
+import eu.stratosphere.sopremo.type.IArrayNode;
+import eu.stratosphere.sopremo.type.IJsonNode;
+import eu.stratosphere.sopremo.type.IObjectNode;
+import eu.stratosphere.sopremo.type.IntNode;
+import eu.stratosphere.sopremo.type.LongNode;
+import eu.stratosphere.sopremo.type.ObjectNode;
+import eu.stratosphere.sopremo.type.TextNode;
 
 @Name(verb = "enumerate")
 @InputCardinality(1)

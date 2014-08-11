@@ -22,17 +22,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.apache.flink.api.common.operators.base.GenericDataSourceBase;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.core.fs.FSDataInputStream;
+import org.apache.flink.core.fs.FSDataOutputStream;
+import org.apache.flink.core.fs.FileInputSplit;
+import org.apache.flink.core.fs.FileStatus;
+import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.core.fs.Path;
+
 import com.google.common.collect.Lists;
 
-import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.core.fs.FSDataInputStream;
-import eu.stratosphere.core.fs.FSDataOutputStream;
-import eu.stratosphere.core.fs.FileInputSplit;
-import eu.stratosphere.core.fs.FileStatus;
-import eu.stratosphere.core.fs.FileSystem;
-import eu.stratosphere.core.fs.Path;
-import eu.stratosphere.runtime.fs.LineReader;
 import eu.stratosphere.sopremo.cache.NodeCache;
 import eu.stratosphere.sopremo.operator.Name;
 import eu.stratosphere.sopremo.operator.Property;
@@ -572,23 +572,20 @@ public class CsvFormat extends SopremoFormat {
 			final long stepSize = fileSize / numSamples;
 
 			int fileNum = 0;
-			int samplesTaken = 0;
+			int sampleNum = 0;
 
 			// take the samples
-			for (int sampleNum = 0; sampleNum < numSamples && fileNum < files.size(); sampleNum++) {
+			for (; sampleNum < numSamples && fileNum < files.size(); sampleNum++) {
 				FileStatus currentFile = files.get(fileNum);
 				FSDataInputStream inStream = null;
 
 				try {
 					inStream = fs.open(currentFile.getPath());
-					final LineReader lineReader = new LineReader(inStream, offset, currentFile.getLen() - offset, 1024);
-					final byte[] line = lineReader.readLine();
-					lineReader.close();
+					this.pos = 0;
+					nextValue();
+					inStream.close();
 
-					if (line != null && line.length > 0) {
-						samplesTaken++;
-						bytes += line.length + 1; // one for the linebreak
-					}
+					bytes += this.pos;
 				} finally {
 					// make a best effort to close
 					if (inStream != null)
@@ -607,7 +604,7 @@ public class CsvFormat extends SopremoFormat {
 				}
 			}
 
-			return bytes / (float) samplesTaken;
+			return sampleNum == 0 ? 0 : bytes / (float) sampleNum;
 		}
 
 		/*
@@ -625,7 +622,7 @@ public class CsvFormat extends SopremoFormat {
 					this.coercingCaches.set(index, new NodeCache());
 					hasConversion = true;
 				}
-			if(hasConversion)
+			if (hasConversion)
 				this.coercingRawNode = new TextNode();
 		}
 

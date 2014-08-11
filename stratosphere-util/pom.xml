@@ -5,15 +5,15 @@
 	<parent>
 		<artifactId>hll</artifactId>
 		<groupId>eu.stratosphere</groupId>
-		<version>0.5-SNAPSHOT</version>
+		<version>0.6-SNAPSHOT</version>
 	</parent>
 	<artifactId>stratosphere-util</artifactId>
 	<name>stratosphere-util</name>
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
-			<groupId>eu.stratosphere</groupId>
-			<artifactId>stratosphere-core</artifactId>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-core</artifactId>
 			<version>${core.version}</version>
 		</dependency>
 	</dependencies>

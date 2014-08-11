@@ -22,11 +22,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.flink.api.common.operators.base.BulkIterationBase;
+import org.apache.flink.api.common.operators.base.DeltaIterationBase;
+
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
-import eu.stratosphere.api.common.operators.base.BulkIterationBase;
-import eu.stratosphere.api.common.operators.base.DeltaIterationBase;
 import eu.stratosphere.pact.common.plan.OperatorUtil;
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.SopremoEnvironment;
@@ -270,14 +271,14 @@ public class IterativeSopremoModule extends SopremoModule {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static void replace(final Iterable<? extends eu.stratosphere.api.common.operators.Operator<?>> nodes,
-			final eu.stratosphere.api.common.operators.Operator<?> toReplace,
-			final eu.stratosphere.api.common.operators.Operator<?> replaceWith) {
-		for (final eu.stratosphere.api.common.operators.Operator<?> operator : nodes) {
-			final List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>> inputs = OperatorUtil.getInputs(operator);
+	private static void replace(final Iterable<? extends org.apache.flink.api.common.operators.Operator<?>> nodes,
+			final org.apache.flink.api.common.operators.Operator<?> toReplace,
+			final org.apache.flink.api.common.operators.Operator<?> replaceWith) {
+		for (final org.apache.flink.api.common.operators.Operator<?> operator : nodes) {
+			final List<org.apache.flink.api.common.operators.Operator<SopremoRecord>> inputs = OperatorUtil.getInputs(operator);
 			for (int index = 0; index < inputs.size(); index++)
 				if (inputs.get(index) == toReplace)
-					inputs.set(index, (eu.stratosphere.api.common.operators.Operator<SopremoRecord>) replaceWith);
+					inputs.set(index, (org.apache.flink.api.common.operators.Operator<SopremoRecord>) replaceWith);
 			OperatorUtil.setInputs(operator, inputs);
 		}
 	}

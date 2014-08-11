@@ -20,7 +20,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;

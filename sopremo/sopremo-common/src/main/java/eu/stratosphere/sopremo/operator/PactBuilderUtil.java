@@ -14,12 +14,12 @@
  **********************************************************************************************************************/
 package eu.stratosphere.sopremo.operator;
 
-import com.google.common.base.Preconditions;
+import org.apache.flink.api.java.record.operators.CoGroupOperator;
+import org.apache.flink.api.java.record.operators.JoinOperator;
+import org.apache.flink.api.java.record.operators.ReduceOperator;
+import org.apache.flink.types.Key;
 
-import eu.stratosphere.api.java.record.operators.CoGroupOperator;
-import eu.stratosphere.api.java.record.operators.JoinOperator;
-import eu.stratosphere.api.java.record.operators.ReduceOperator;
-import eu.stratosphere.types.Key;
+import com.google.common.base.Preconditions;
 
 /**
  * Some convenience methods for dealing with the PACT-Builder pattern.

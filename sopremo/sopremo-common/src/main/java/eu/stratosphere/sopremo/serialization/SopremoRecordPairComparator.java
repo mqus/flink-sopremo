@@ -15,7 +15,8 @@
 
 package eu.stratosphere.sopremo.serialization;
 
-import eu.stratosphere.api.common.typeutils.TypePairComparator;
+import org.apache.flink.api.common.typeutils.TypePairComparator;
+
 import eu.stratosphere.sopremo.cache.NodeCache;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.sopremo.pact.SopremoUtil;

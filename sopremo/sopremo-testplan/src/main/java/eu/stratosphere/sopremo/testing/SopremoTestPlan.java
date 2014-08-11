@@ -11,16 +11,16 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.api.common.operators.base.FileDataSinkBase;
-import eu.stratosphere.api.common.operators.base.FileDataSourceBase;
-import eu.stratosphere.api.common.operators.base.GenericDataSinkBase;
-import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.configuration.GlobalConfiguration;
-import eu.stratosphere.core.fs.FSDataInputStream;
-import eu.stratosphere.core.fs.FileSystem;
-import eu.stratosphere.core.fs.Path;
+import org.apache.flink.api.common.Plan;
+import org.apache.flink.api.common.operators.base.FileDataSinkBase;
+import org.apache.flink.api.common.operators.base.FileDataSourceBase;
+import org.apache.flink.api.common.operators.base.GenericDataSinkBase;
+import org.apache.flink.api.common.operators.base.GenericDataSourceBase;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.core.fs.FSDataInputStream;
+import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.core.fs.Path;
+
 import eu.stratosphere.core.testing.AssertUtil;
 import eu.stratosphere.core.testing.GenericTestPlan;
 import eu.stratosphere.core.testing.GenericTestRecords;
@@ -103,8 +103,9 @@ public class SopremoTestPlan {
 	private boolean trace;
 
 	private int dop = -1;
-	
-	private static final TypeConfig<SopremoRecord> EMPTY_CONFIG = SopremoTestRecords.getTypeConfig(SopremoRecordLayout.create(), new DefaultTypeRegistry());
+
+	private static final TypeConfig<SopremoRecord> EMPTY_CONFIG = SopremoTestRecords.getTypeConfig(SopremoRecordLayout.create(),
+		new DefaultTypeRegistry());
 
 	/**
 	 * Initializes a SopremoTestPlan with the given number of in/outputs. All inputs are initialized with {@link Input}s
@@ -356,7 +357,7 @@ public class SopremoTestPlan {
 	 */
 	public void run() {
 		final SopremoPlan sopremoPlan = this.getSopremoPlan();
-		final Collection<eu.stratosphere.api.common.operators.Operator<?>> sinks = sopremoPlan.assemblePact();
+		final Collection<org.apache.flink.api.common.operators.Operator<?>> sinks = sopremoPlan.assemblePact();
 		final SopremoRecordLayout layout = sopremoPlan.getLayout();
 		final ITypeRegistry typeRegistry = sopremoPlan.getTypeRegistry();
 		this.testPlan = new SopremoRecordTestPlan(layout, typeRegistry, sinks);
@@ -657,7 +658,7 @@ public class SopremoTestPlan {
 		public PactModule asPactModule() {
 			final PactModule pactModule = new PactModule(1, 0);
 			final FileDataSinkBase<SopremoRecord> contract = GenericTestPlan.createDefaultSink(this.getOutputPath(), EMPTY_CONFIG);
-			contract.setInput((eu.stratosphere.api.common.operators.Operator<SopremoRecord>) pactModule.getInput(0));
+			contract.setInput((org.apache.flink.api.common.operators.Operator<SopremoRecord>) pactModule.getInput(0));
 			pactModule.addInternalOutput(contract);
 			SopremoEnvironment.getInstance().save(contract.getParameters());
 			return pactModule;
@@ -721,7 +722,7 @@ public class SopremoTestPlan {
 		public PactModule asPactModule() {
 			final PactModule pactModule = new PactModule(0, 1);
 			final FileDataSourceBase<?> contract = GenericTestPlan.createDefaultSource(this.getInputPath(), EMPTY_CONFIG);
-			((GenericDataSinkBase<SopremoRecord>) pactModule.getOutput(0)).setInput((eu.stratosphere.api.common.operators.Operator<SopremoRecord>) contract);
+			((GenericDataSinkBase<SopremoRecord>) pactModule.getOutput(0)).setInput((org.apache.flink.api.common.operators.Operator<SopremoRecord>) contract);
 			SopremoEnvironment.getInstance().save(contract.getParameters());
 			return pactModule;
 		}
@@ -760,9 +761,10 @@ public class SopremoTestPlan {
 		private final ITypeRegistry typeRegistry;
 
 		protected SopremoRecordTestPlan(final SopremoRecordLayout layout, final ITypeRegistry typeRegistry,
-				final Collection<? extends eu.stratosphere.api.common.operators.Operator<?>> contracts) {
-			super(SopremoTestRecords.getTypeConfig(SopremoRecordPostPass.PRUNE_LAYOUT ? SopremoRecordLayout.create() : layout, typeRegistry), contracts);
-//			super(, contracts);
+				final Collection<? extends org.apache.flink.api.common.operators.Operator<?>> contracts) {
+			super(
+				SopremoTestRecords.getTypeConfig(SopremoRecordPostPass.PRUNE_LAYOUT ? SopremoRecordLayout.create() : layout, typeRegistry),
+				contracts);
 			this.layout = layout;
 			this.typeRegistry = typeRegistry;
 		}
@@ -775,7 +777,7 @@ public class SopremoTestPlan {
 		public String toString() {
 			return PactModule.valueOf(this.getSinks()).toString();
 		}
-		
+
 		/*
 		 * (non-Javadoc)
 		 * @see eu.stratosphere.core.testing.GenericTestPlan#createPlan(java.util.Collection)

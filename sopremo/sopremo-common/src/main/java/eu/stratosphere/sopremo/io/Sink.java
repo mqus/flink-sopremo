@@ -7,9 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import eu.stratosphere.api.common.io.OutputFormat;
-import eu.stratosphere.api.common.operators.base.GenericDataSinkBase;
-import eu.stratosphere.api.common.operators.util.UserCodeClassWrapper;
+import org.apache.flink.api.common.io.OutputFormat;
+import org.apache.flink.api.common.operators.base.GenericDataSinkBase;
+import org.apache.flink.api.common.operators.util.UserCodeClassWrapper;
+
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;

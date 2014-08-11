@@ -24,10 +24,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import eu.stratosphere.api.common.operators.base.FileDataSourceBase;
-import eu.stratosphere.api.common.operators.base.GenericDataSinkBase;
-import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
-import eu.stratosphere.api.java.record.operators.GenericDataSink;
+import org.apache.flink.api.common.operators.base.FileDataSourceBase;
+import org.apache.flink.api.common.operators.base.GenericDataSinkBase;
+import org.apache.flink.api.common.operators.base.GenericDataSourceBase;
+
 import eu.stratosphere.pact.common.plan.OperatorUtil;
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.Schema;
@@ -82,11 +82,11 @@ public class ElementarySopremoModule extends SopremoModule {
 	/**
 	 * Assembles the Pacts of the contained Sopremo operators and returns a list of all Pact sinks. These sinks may
 	 * either be directly a {@link GenericDataSource} or an unconnected
-	 * {@link eu.stratosphere.api.common.operators.Operator<?>}.
+	 * {@link org.apache.flink.api.common.operators.Operator<?>}.
 	 * 
 	 * @return a list of Pact sinks
 	 */
-	public Collection<eu.stratosphere.api.common.operators.Operator<?>> assemblePact() {
+	public Collection<org.apache.flink.api.common.operators.Operator<?>> assemblePact() {
 		// if(layout == null)
 		// layout = SopremoRecordLayout.create(this.schema.getKeyExpressions());
 		return new PactAssembler().assemble();
@@ -152,26 +152,26 @@ public class ElementarySopremoModule extends SopremoModule {
 
 	/**
 	 * Helper class needed to assemble a Pact program from the {@link PactModule}s of several
-	 * {@link eu.stratosphere.api.common.operators.Operator<?>}s.
+	 * {@link org.apache.flink.api.common.operators.Operator<?>}s.
 	 */
 	private class PactAssembler {
 		private final Map<Operator<?>, PactModule> modules = new IdentityHashMap<Operator<?>, PactModule>();
 
-		private final Map<Operator<?>, List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>>> operatorOutputs =
-			new IdentityHashMap<Operator<?>, List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>>>();
+		private final Map<Operator<?>, List<org.apache.flink.api.common.operators.Operator<SopremoRecord>>> operatorOutputs =
+			new IdentityHashMap<Operator<?>, List<org.apache.flink.api.common.operators.Operator<SopremoRecord>>>();
 
-		public Collection<eu.stratosphere.api.common.operators.Operator<?>> assemble() {
+		public Collection<org.apache.flink.api.common.operators.Operator<?>> assemble() {
 			this.convertDAGToModules();
 
 			this.connectModules();
 
-			final List<eu.stratosphere.api.common.operators.Operator<?>> pactSinks = this.findPACTSinks();
+			final List<org.apache.flink.api.common.operators.Operator<?>> pactSinks = this.findPACTSinks();
 
 			return pactSinks;
 		}
 
-		private eu.stratosphere.api.common.operators.Operator<SopremoRecord> traceOperatorInput(final Operator<?> operator,
-				final eu.stratosphere.api.common.operators.Operator<SopremoRecord> input) {
+		private org.apache.flink.api.common.operators.Operator<SopremoRecord> traceOperatorInput(final Operator<?> operator,
+				final org.apache.flink.api.common.operators.Operator<SopremoRecord> input) {
 			final int inputIndex =
 				new IdentityList<GenericDataSourceBase<?, ?>>(this.modules.get(operator).getInputs()).indexOf(input);
 			
@@ -179,8 +179,8 @@ public class ElementarySopremoModule extends SopremoModule {
 				return input;
 			
 			final Operator.Output inputSource = operator.getInputs().get(inputIndex).getSource();
-			final eu.stratosphere.api.common.operators.Operator<SopremoRecord> outputtingOperator =
-				(eu.stratosphere.api.common.operators.Operator<SopremoRecord>) this.operatorOutputs.get(inputSource.getOperator()).get(inputSource.getIndex());
+			final org.apache.flink.api.common.operators.Operator<SopremoRecord> outputtingOperator =
+				(org.apache.flink.api.common.operators.Operator<SopremoRecord>) this.operatorOutputs.get(inputSource.getOperator()).get(inputSource.getIndex());
 			if (outputtingOperator instanceof FileDataSourceBase && !(inputSource.getOperator() instanceof Source))
 				return traceOperatorInput(inputSource.getOperator(), outputtingOperator);
 			return outputtingOperator;
@@ -191,8 +191,8 @@ public class ElementarySopremoModule extends SopremoModule {
 				final Operator<?> operator = operatorModule.getKey();
 				final PactModule module = operatorModule.getValue();
 
-				for (final eu.stratosphere.api.common.operators.Operator<?> contract : module.getReachableNodes()) {
-					final List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>> inputs = OperatorUtil.getInputs(contract);
+				for (final org.apache.flink.api.common.operators.Operator<?> contract : module.getReachableNodes()) {
+					final List<org.apache.flink.api.common.operators.Operator<SopremoRecord>> inputs = OperatorUtil.getInputs(contract);
 
 					for (int inputIndex = 0; inputIndex < inputs.size(); inputIndex++)
 						inputs.set(inputIndex, traceOperatorInput(operator, inputs.get(inputIndex)));
@@ -211,8 +211,8 @@ public class ElementarySopremoModule extends SopremoModule {
 
 						PactAssembler.this.modules.put(node, module);
 						final List<GenericDataSinkBase<SopremoRecord>> outputFunctions = module.getOutputs();
-						final List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>> outputOperators =
-							new ArrayList<eu.stratosphere.api.common.operators.Operator<SopremoRecord>>();
+						final List<org.apache.flink.api.common.operators.Operator<SopremoRecord>> outputOperators =
+							new ArrayList<org.apache.flink.api.common.operators.Operator<SopremoRecord>>();
 						for (final GenericDataSinkBase<SopremoRecord> sink : outputFunctions)
 							outputOperators.add(sink.getInput());
 						PactAssembler.this.operatorOutputs.put(node, outputOperators);
@@ -223,9 +223,9 @@ public class ElementarySopremoModule extends SopremoModule {
 				module.validate();
 		}
 
-		private List<eu.stratosphere.api.common.operators.Operator<?>> findPACTSinks() {
-			final List<eu.stratosphere.api.common.operators.Operator<?>> pactSinks =
-				new ArrayList<eu.stratosphere.api.common.operators.Operator<?>>();
+		private List<org.apache.flink.api.common.operators.Operator<?>> findPACTSinks() {
+			final List<org.apache.flink.api.common.operators.Operator<?>> pactSinks =
+				new ArrayList<org.apache.flink.api.common.operators.Operator<?>>();
 			for (final Operator<?> sink : ElementarySopremoModule.this.getAllOutputs())
 				for (final GenericDataSinkBase<?> outputFunction : this.modules.get(sink).getAllOutputs())
 					if (sink instanceof Sink)

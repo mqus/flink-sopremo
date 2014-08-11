@@ -3,13 +3,13 @@ package eu.stratosphere.meteor.client.common;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.flink.configuration.ConfigConstants;
+import org.apache.flink.configuration.Configuration;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-import eu.stratosphere.configuration.ConfigConstants;
-import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.meteor.client.ClientFrontend;
 import eu.stratosphere.meteor.client.WebFrontend;
 import eu.stratosphere.meteor.client.web.AnalysisServlet;
@@ -125,7 +125,7 @@ public class MeteorContextHandler extends HandlerList {
 			return resourceDir;
 
 		// get base path of Stratosphere installation
-		final String basePath = config.getString(ConfigConstants.STRATOSPHERE_BASE_DIR_PATH_KEY, "");
+		final String basePath = config.getString(ConfigConstants.FLINK_BASE_DIR_PATH_KEY, "");
 
 		// get relative resource path
 		final String resources =

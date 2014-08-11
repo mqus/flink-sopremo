@@ -1,10 +1,11 @@
 package eu.stratosphere.sopremo.pact;
 
+import org.apache.flink.util.Collector;
+
 import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.sopremo.type.IJsonNode;
-import eu.stratosphere.util.Collector;
 
 /**
  * The JsonCollector converts {@link IJsonNode}s to {@link SopremoRecord}s and collects this records with a given
@@ -48,6 +49,14 @@ public class JsonCollector<T extends IJsonNode> implements Collector<T> {
 			SopremoUtil.LOG.trace(String.format(" to %s", resultValue));
 		this.record.setNode(resultValue);
 		this.collector.collect(this.record);
+	}
+	
+	public SopremoRecord wrap(final T value) {
+		final IJsonNode resultValue = this.resultProjection.evaluate(value);
+		if (SopremoUtil.DEBUG && SopremoUtil.LOG.isTraceEnabled())
+			SopremoUtil.LOG.trace(String.format(" to %s", resultValue));
+		this.record.setNode(resultValue);
+		return this.record;
 	}
 
 	/**

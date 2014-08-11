@@ -21,24 +21,23 @@ import java.util.List;
 
 import javolution.text.TypeFormat;
 
+import org.apache.flink.api.common.io.InputFormat;
+import org.apache.flink.api.common.operators.base.GenericDataSourceBase;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.core.fs.FileInputSplit;
+import org.apache.flink.core.fs.FileStatus;
+import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.core.fs.Path;
+
 import com.esotericsoftware.kryo.DefaultSerializer;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 
-import eu.stratosphere.api.common.io.InputFormat;
-import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
-import eu.stratosphere.api.common.operators.util.UserCodeClassWrapper;
-import eu.stratosphere.api.java.record.operators.OperatorInfoHelper;
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.core.fs.FileInputSplit;
-import eu.stratosphere.core.fs.FileStatus;
-import eu.stratosphere.core.fs.FileSystem;
-import eu.stratosphere.core.fs.Path;
 import eu.stratosphere.sopremo.io.SopremoFormat;
-import eu.stratosphere.sopremo.io.SopremoOperatorInfoHelper;
 import eu.stratosphere.sopremo.io.SopremoFormat.SopremoFileInputFormat;
+import eu.stratosphere.sopremo.io.SopremoOperatorInfoHelper;
 import eu.stratosphere.sopremo.io.Source;
 import eu.stratosphere.sopremo.operator.JsonStream;
 import eu.stratosphere.sopremo.operator.Operator;

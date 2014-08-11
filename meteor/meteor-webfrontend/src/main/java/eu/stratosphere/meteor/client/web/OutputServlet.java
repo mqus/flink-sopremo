@@ -9,9 +9,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.flink.util.StringUtils;
+
 import eu.stratosphere.meteor.client.common.HDFSUtil;
 import eu.stratosphere.meteor.client.common.MeteorContextHandler;
-import eu.stratosphere.util.StringUtils;
 
 /**
  * The output servlet shows the JSON script of pact plan

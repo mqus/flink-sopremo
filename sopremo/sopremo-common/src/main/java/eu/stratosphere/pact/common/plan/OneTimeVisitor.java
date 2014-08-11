@@ -3,8 +3,8 @@ package eu.stratosphere.pact.common.plan;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-import eu.stratosphere.util.Visitable;
-import eu.stratosphere.util.Visitor;
+import org.apache.flink.util.Visitable;
+import org.apache.flink.util.Visitor;
 
 /**
  * Visitor adapter that guarantees to visit all {@link Visitable}s only once.

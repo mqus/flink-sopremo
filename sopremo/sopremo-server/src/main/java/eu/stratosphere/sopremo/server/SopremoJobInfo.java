@@ -17,8 +17,9 @@ package eu.stratosphere.sopremo.server;
 import java.util.HashMap;
 import java.util.Map;
 
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.nephele.client.JobClient;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.client.JobClient;
+
 import eu.stratosphere.sopremo.execution.ExecutionRequest;
 import eu.stratosphere.sopremo.execution.ExecutionResponse.ExecutionState;
 import eu.stratosphere.sopremo.execution.SopremoID;

@@ -3,10 +3,11 @@ package eu.stratosphere.pact.common.plan;
 import java.util.ArrayList;
 import java.util.List;
 
-import eu.stratosphere.api.common.operators.IterationOperator;
-import eu.stratosphere.api.common.operators.Operator;
-import eu.stratosphere.api.common.operators.base.BulkIterationBase;
-import eu.stratosphere.api.common.operators.base.DeltaIterationBase;
+import org.apache.flink.api.common.operators.IterationOperator;
+import org.apache.flink.api.common.operators.Operator;
+import org.apache.flink.api.common.operators.base.BulkIterationBase;
+import org.apache.flink.api.common.operators.base.DeltaIterationBase;
+
 import eu.stratosphere.util.dag.ConnectionNavigator;
 
 /**

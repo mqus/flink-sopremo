@@ -20,8 +20,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,7 +34,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import eu.stratosphere.sopremo.AbstractSopremoType;
-import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.expressions.ArrayAccess;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.util.AppendUtil;

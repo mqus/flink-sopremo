@@ -7,8 +7,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.api.common.operators.base.GenericDataSinkBase;
+import org.apache.flink.api.common.Plan;
+import org.apache.flink.api.common.operators.base.GenericDataSinkBase;
+
 import eu.stratosphere.sopremo.AbstractSopremoType;
 import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.SopremoEnvironment;
@@ -72,11 +73,11 @@ public class SopremoPlan extends AbstractSopremoType implements Serializable {
 	/**
 	 * Assembles the Pacts of the contained Sopremo operators and returns a list
 	 * of all Pact sinks. These sinks may either be directly a {@link GenericDataSink} or an unconnected
-	 * {@link eu.stratosphere.api.common.operators.Operator}.
+	 * {@link org.apache.flink.api.common.operators.Operator}.
 	 * 
 	 * @return a list of Pact sinks
 	 */
-	public Collection<eu.stratosphere.api.common.operators.Operator<?>> assemblePact() {
+	public Collection<org.apache.flink.api.common.operators.Operator<?>> assemblePact() {
 		final ElementarySopremoModule elementaryModule = this.module.asElementary();
 		this.layout = SopremoRecordLayout.create(elementaryModule.getSchema().getKeyExpressions());
 		SopremoEnvironment.getInstance().setLayout(this.layout);
@@ -205,8 +206,8 @@ public class SopremoPlan extends AbstractSopremoType implements Serializable {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Collection<GenericDataSinkBase<SopremoRecord>> checkForSinks(
-			final Collection<eu.stratosphere.api.common.operators.Operator<?>> contracts) {
-		for (final eu.stratosphere.api.common.operators.Operator contract : contracts)
+			final Collection<org.apache.flink.api.common.operators.Operator<?>> contracts) {
+		for (final org.apache.flink.api.common.operators.Operator contract : contracts)
 			if (!GenericDataSinkBase.class.isInstance(contract))
 				throw new IllegalStateException("Operator without connected sink detected " + contract);
 		return (Collection) contracts;

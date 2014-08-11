@@ -23,6 +23,12 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 
+import org.apache.flink.api.common.JobExecutionResult;
+import org.apache.flink.api.common.Plan;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.client.JobClient;
+import org.apache.flink.runtime.client.JobExecutionException;
+import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,12 +36,6 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import eu.stratosphere.api.common.JobExecutionResult;
-import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.nephele.client.JobClient;
-import eu.stratosphere.nephele.client.JobExecutionException;
-import eu.stratosphere.nephele.jobgraph.JobGraph;
 import eu.stratosphere.sopremo.base.Selection;
 import eu.stratosphere.sopremo.execution.ExecutionRequest;
 import eu.stratosphere.sopremo.execution.ExecutionRequest.ExecutionMode;

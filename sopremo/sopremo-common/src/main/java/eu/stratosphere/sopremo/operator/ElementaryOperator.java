@@ -12,19 +12,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import eu.stratosphere.api.common.functions.AbstractFunction;
-import eu.stratosphere.api.common.functions.Function;
-import eu.stratosphere.api.common.operators.Ordering;
-import eu.stratosphere.api.common.operators.base.CoGroupOperatorBase;
-import eu.stratosphere.api.common.operators.base.CollectorMapOperatorBase;
-import eu.stratosphere.api.common.operators.base.CrossOperatorBase;
-import eu.stratosphere.api.common.operators.base.FilterOperatorBase;
-import eu.stratosphere.api.common.operators.base.FlatMapOperatorBase;
-import eu.stratosphere.api.common.operators.base.GroupReduceOperatorBase;
-import eu.stratosphere.api.common.operators.base.JoinOperatorBase;
-import eu.stratosphere.api.common.operators.base.MapOperatorBase;
-import eu.stratosphere.api.common.operators.base.ReduceOperatorBase;
-import eu.stratosphere.configuration.Configuration;
+import org.apache.flink.api.common.functions.AbstractRichFunction;
+import org.apache.flink.api.common.functions.Function;
+import org.apache.flink.api.common.operators.Ordering;
+import org.apache.flink.api.common.operators.base.CoGroupOperatorBase;
+import org.apache.flink.api.common.operators.base.CrossOperatorBase;
+import org.apache.flink.api.common.operators.base.FilterOperatorBase;
+import org.apache.flink.api.common.operators.base.FlatMapOperatorBase;
+import org.apache.flink.api.common.operators.base.GroupReduceOperatorBase;
+import org.apache.flink.api.common.operators.base.JoinOperatorBase;
+import org.apache.flink.api.common.operators.base.MapOperatorBase;
+import org.apache.flink.api.common.operators.base.ReduceOperatorBase;
+import org.apache.flink.configuration.Configuration;
+
 import eu.stratosphere.pact.common.IdentityMap;
 import eu.stratosphere.pact.common.plan.OperatorUtil;
 import eu.stratosphere.pact.common.plan.PactModule;
@@ -73,7 +73,7 @@ import eu.stratosphere.util.IdentityList;
  * {@link Function}.
  * <li>{@link #getOperator(SopremoRecordLayout)} instantiates a contract matching the stub class resulting from the
  * previous callback. This callback is especially useful if a PACT stub is chosen that is not supported in Sopremo yet.
- * <li>{@link #configureOperator(eu.stratosphere.api.common.operators.Operator, Configuration)} is a callback used to
+ * <li>{@link #configureOperator(org.apache.flink.api.common.operators.Operator, Configuration)} is a callback used to
  * set parameters of the {@link Configuration} of the stub.
  * <li>{@link #asPactModule()} gives complete control over the creation of the {@link PactModule}.
  * </ul>
@@ -162,16 +162,16 @@ public abstract class ElementaryOperator<Self extends ElementaryOperator<Self>>
 
 	public PactModule asPactModule() {
 		SopremoRecordLayout layout = SopremoEnvironment.getInstance().getLayout();
-		final eu.stratosphere.api.common.operators.Operator<SopremoRecord> contract = this.getOperator(layout);
+		final org.apache.flink.api.common.operators.Operator<SopremoRecord> contract = this.getOperator(layout);
 		SopremoEnvironment.getInstance().getEvaluationContext().setResultProjection(this.resultProjection);
 		this.configureOperator(contract, contract.getParameters());
 
-		final List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>> inputs = OperatorUtil.getInputs(contract);
-		final List<eu.stratosphere.api.common.operators.Operator<SopremoRecord>> distinctInputs =
-			new IdentityList<eu.stratosphere.api.common.operators.Operator<SopremoRecord>>();
+		final List<org.apache.flink.api.common.operators.Operator<SopremoRecord>> inputs = OperatorUtil.getInputs(contract);
+		final List<org.apache.flink.api.common.operators.Operator<SopremoRecord>> distinctInputs =
+			new IdentityList<org.apache.flink.api.common.operators.Operator<SopremoRecord>>();
 
 		for (int index = 0; index < inputs.size(); index++) {
-			eu.stratosphere.api.common.operators.Operator<SopremoRecord> input = inputs.get(index);
+			org.apache.flink.api.common.operators.Operator<SopremoRecord> input = inputs.get(index);
 			if (input == null)
 				inputs.set(index, input = new MapOperatorBase<SopremoRecord, SopremoRecord, IdentityMap>(IdentityMap.class,
 					SopremoOperatorInfoHelper.unary(), "nop"));
@@ -503,12 +503,12 @@ public abstract class ElementaryOperator<Self extends ElementaryOperator<Self>>
 	 *        the configuration of the stub
 	 */
 	@SuppressWarnings("unchecked")
-	protected void configureOperator(final eu.stratosphere.api.common.operators.Operator contract,
+	protected void configureOperator(final org.apache.flink.api.common.operators.Operator<?> contract,
 			final Configuration stubConfiguration) {
 
 		SopremoUtil.transferFieldsToConfiguration(this, ElementaryOperator.class, stubConfiguration,
-			(Class<? extends AbstractFunction>) contract.getUserCodeWrapper().getUserCodeClass(),
-			AbstractFunction.class);
+			(Class<? extends AbstractRichFunction>) contract.getUserCodeWrapper().getUserCodeClass(),
+			AbstractRichFunction.class);
 
 		contract.setDegreeOfParallelism(this.getDegreeOfParallelism());
 		SopremoEnvironment.getInstance().save(contract.getParameters());
@@ -576,11 +576,11 @@ public abstract class ElementaryOperator<Self extends ElementaryOperator<Self>>
 	 * @return the contract representing this operator
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	protected eu.stratosphere.api.common.operators.Operator getOperator(final SopremoRecordLayout layout) {
+	protected org.apache.flink.api.common.operators.Operator getOperator(final SopremoRecordLayout layout) {
 		final Class<? extends Function> stubClass = this.getFunctionClass();
 		if (stubClass == null)
 			throw new IllegalStateException("no implementing stub found");
-		final Class<? extends eu.stratosphere.api.common.operators.Operator> contractClass =
+		final Class<? extends org.apache.flink.api.common.operators.Operator> contractClass =
 			OperatorUtil.getContractClass(stubClass);
 		if (contractClass == null)
 			throw new IllegalStateException("no associated contract found");
@@ -589,8 +589,6 @@ public abstract class ElementaryOperator<Self extends ElementaryOperator<Self>>
 		try {
 			if (contractClass == MapOperatorBase.class)
 				return new MapOperatorBase(stubClass, SopremoOperatorInfoHelper.unary(), name);
-			else if (contractClass == CollectorMapOperatorBase.class)
-				return new CollectorMapOperatorBase(stubClass, SopremoOperatorInfoHelper.unary(), name);
 			else if (contractClass == FilterOperatorBase.class)
 				return new FilterOperatorBase(stubClass, SopremoOperatorInfoHelper.unary(), name);
 			else if (contractClass == FlatMapOperatorBase.class)

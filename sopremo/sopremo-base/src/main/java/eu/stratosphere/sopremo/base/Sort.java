@@ -14,7 +14,8 @@
  **********************************************************************************************************************/
 package eu.stratosphere.sopremo.base;
 
-import eu.stratosphere.api.common.operators.Order;
+import org.apache.flink.api.common.operators.Order;
+
 import eu.stratosphere.sopremo.expressions.ConstantExpression;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.sopremo.expressions.InputSelection;

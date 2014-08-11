@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Provides a {@link Set} that uses reference-equality and thus intentionally violates the general Set contract.

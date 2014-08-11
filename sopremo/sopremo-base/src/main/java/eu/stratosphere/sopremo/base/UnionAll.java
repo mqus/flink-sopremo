@@ -2,16 +2,13 @@ package eu.stratosphere.sopremo.base;
 
 import java.util.List;
 
-import eu.stratosphere.api.common.operators.Operator;
-import eu.stratosphere.api.common.operators.base.MapOperatorBase;
+import org.apache.flink.api.common.operators.Operator;
+
 import eu.stratosphere.pact.common.plan.PactModule;
-import eu.stratosphere.sopremo.io.SopremoOperatorInfoHelper;
 import eu.stratosphere.sopremo.operator.ElementaryOperator;
 import eu.stratosphere.sopremo.operator.InputCardinality;
 import eu.stratosphere.sopremo.operator.JsonStream;
 import eu.stratosphere.sopremo.operator.Name;
-import eu.stratosphere.sopremo.pact.SopremoNop;
-import eu.stratosphere.sopremo.serialization.SopremoRecord;
 
 /**
  * Unifies the input json streams in a bag semantic.

@@ -23,14 +23,16 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.configuration.GlobalConfiguration;
-import eu.stratosphere.core.fs.Path;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheManager;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileRequest;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileResponse;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheUpdate;
-import eu.stratosphere.nephele.jobgraph.JobID;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.GlobalConfiguration;
+import org.apache.flink.core.fs.Path;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheManager;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheProfileRequest;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheProfileResponse;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheUpdate;
+import org.apache.flink.runtime.jobgraph.JobID;
+import org.apache.flink.util.StringUtils;
+
 import eu.stratosphere.nephele.rpc.RPCService;
 import eu.stratosphere.sopremo.execution.ExecutionRequest;
 import eu.stratosphere.sopremo.execution.ExecutionRequest.ExecutionMode;
@@ -40,7 +42,6 @@ import eu.stratosphere.sopremo.execution.SopremoConstants;
 import eu.stratosphere.sopremo.execution.SopremoExecutionProtocol;
 import eu.stratosphere.sopremo.execution.SopremoID;
 import eu.stratosphere.sopremo.operator.SopremoPlan;
-import eu.stratosphere.util.StringUtils;
 
 /**
  */
@@ -372,6 +373,8 @@ public class DefaultClient implements Closeable {
 		public void progressUpdate(final ExecutionState state, final String detail) {
 			if (state == ExecutionState.ERROR)
 				throw new RuntimeException(detail);
+			else if(state == ExecutionState.FINISHED)
+				System.out.println(detail);
 		}
 	}
 

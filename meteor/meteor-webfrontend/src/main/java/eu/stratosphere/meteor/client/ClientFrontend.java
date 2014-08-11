@@ -10,8 +10,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.flink.configuration.GlobalConfiguration;
 
-import eu.stratosphere.configuration.GlobalConfiguration;
 import eu.stratosphere.meteor.QueryParser;
 import eu.stratosphere.meteor.client.web.ErrorServlet;
 import eu.stratosphere.sopremo.client.DefaultClient;

@@ -17,10 +17,11 @@ package eu.stratosphere.sopremo.serialization;
 
 import java.io.IOException;
 
-import eu.stratosphere.api.common.typeutils.TypeComparator;
-import eu.stratosphere.core.memory.DataInputView;
-import eu.stratosphere.core.memory.DataOutputView;
-import eu.stratosphere.core.memory.MemorySegment;
+import org.apache.flink.api.common.typeutils.TypeComparator;
+import org.apache.flink.core.memory.DataInputView;
+import org.apache.flink.core.memory.DataOutputView;
+import org.apache.flink.core.memory.MemorySegment;
+
 import eu.stratosphere.sopremo.cache.NodeCache;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.sopremo.packages.ITypeRegistry;

@@ -19,8 +19,8 @@ import static eu.stratosphere.sopremo.testing.FunctionTest.assertReturn;
 import org.junit.Test;
 
 import com.google.common.collect.ContiguousSet;
-import com.google.common.collect.DiscreteDomains;
-import com.google.common.collect.Ranges;
+import com.google.common.collect.DiscreteDomain;
+import com.google.common.collect.Range;
 
 import eu.stratosphere.sopremo.MathFunctions;
 import eu.stratosphere.sopremo.SecondOrderFunctions;
@@ -43,8 +43,8 @@ public class SecondOrderFunctionsTest {
 		pointer.setFunction(new ExpressionFunction(1,
 			new ComparativeExpression(new InputSelection(0), BinaryOperator.GREATER, new ConstantExpression(5))));
 
-		final ContiguousSet<Integer> input = Ranges.closed(0, 10).asSet(DiscreteDomains.integers());
-		final ContiguousSet<Integer> expected = Ranges.closed(6, 10).asSet(DiscreteDomains.integers());
+		final ContiguousSet<Integer> input = ContiguousSet.create(Range.closed(0, 10), DiscreteDomain.integers());
+		final ContiguousSet<Integer> expected = ContiguousSet.create(Range.closed(6, 10), DiscreteDomain.integers());
 		assertReturn(expected, SecondOrderFunctions.FILTER, input, pointer);
 	}
 
@@ -54,7 +54,7 @@ public class SecondOrderFunctionsTest {
 		pointer.setFunction(new ExpressionFunction(1,
 			new ComparativeExpression(new InputSelection(0), BinaryOperator.GREATER, new ConstantExpression(5))));
 
-		final ContiguousSet<Integer> input = Ranges.closed(0, 10).asSet(DiscreteDomains.integers());
+		final ContiguousSet<Integer> input = ContiguousSet.create(Range.closed(0, 10), DiscreteDomain.integers());
 		assertReturn(6, SecondOrderFunctions.FIND, input, pointer);
 	}
 
@@ -64,7 +64,7 @@ public class SecondOrderFunctionsTest {
 		pointer.setFunction(new ExpressionFunction(2,
 			new ArithmeticExpression(new InputSelection(0), ArithmeticOperator.ADDITION, new InputSelection(1))));
 
-		final ContiguousSet<Integer> input = Ranges.closed(0, 10).asSet(DiscreteDomains.integers());
+		final ContiguousSet<Integer> input = ContiguousSet.create(Range.closed(0, 10), DiscreteDomain.integers());
 		assertReturn(55, SecondOrderFunctions.FOLD, input, 0, pointer);
 	}
 

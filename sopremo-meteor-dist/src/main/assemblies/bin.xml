@@ -24,10 +24,7 @@
 
 			<excludes>
 				<exclude>hadoop-*</exclude>
-				<exclude>stratosphere-core*</exclude>
-				<exclude>stratosphere-runtime*</exclude>
-				<exclude>stratosphere-java*</exclude>
-				<exclude>stratosphere-compiler*</exclude>
+				<exclude>flink-*</exclude>
 				<!--<exclude>stratosphere-*</exclude>
 				<exclude>ant-*</exclude>
 				<exclude>aws-*</exclude>

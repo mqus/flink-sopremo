@@ -9,9 +9,13 @@ import java.io.InputStream;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-import org.antlr.runtime.*;
+import org.antlr.runtime.ANTLRFileStream;
+import org.antlr.runtime.ANTLRInputStream;
+import org.antlr.runtime.ANTLRStringStream;
+import org.antlr.runtime.CharStream;
+import org.antlr.runtime.CommonTokenStream;
+import org.apache.flink.core.fs.Path;
 
-import eu.stratosphere.core.fs.Path;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.operator.JsonStream;
 import eu.stratosphere.sopremo.operator.Name;

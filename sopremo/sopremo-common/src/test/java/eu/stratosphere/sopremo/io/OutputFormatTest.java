@@ -19,11 +19,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.flink.api.common.io.FormatUtil;
+import org.apache.flink.api.common.io.OutputFormat;
+import org.apache.flink.configuration.Configuration;
 import org.junit.Ignore;
 
-import eu.stratosphere.api.common.io.FormatUtil;
-import eu.stratosphere.api.common.io.OutputFormat;
-import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.core.testing.AssertUtil;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.io.SopremoFormat.SopremoFileOutputFormat;

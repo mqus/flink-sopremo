@@ -1,26 +1,26 @@
 package eu.stratosphere.sopremo.pact;
 
+import org.apache.flink.api.common.functions.AbstractRichFunction;
+import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.util.Collector;
+
 import com.google.common.reflect.TypeToken;
 
-import eu.stratosphere.api.common.functions.AbstractFunction;
-import eu.stratosphere.api.common.functions.GenericCollectorMap;
-import eu.stratosphere.api.common.functions.GenericFlatMap;
-import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.sopremo.type.IJsonNode;
 import eu.stratosphere.sopremo.type.IObjectNode;
 import eu.stratosphere.sopremo.type.typed.TypedObjectNode;
-import eu.stratosphere.util.Collector;
 
 /**
  * An abstract implementation of the {@link GenericMapper}. GenericSopremoMap provides the functionality to convert the
  * standard input of the GenericMapper to a more manageable representation (the input is converted to a subclass of
  * {@link IJsonNode}).
  */
-public abstract class GenericSopremoMap<In extends IJsonNode, Out extends IJsonNode> extends AbstractFunction implements
-		GenericCollectorMap<SopremoRecord, SopremoRecord>, SopremoFunction {
+public abstract class GenericSopremoMap<In extends IJsonNode, Out extends IJsonNode> extends AbstractRichFunction implements
+		FlatMapFunction<SopremoRecord, SopremoRecord>, SopremoFunction {
 	private EvaluationContext context;
 
 	private JsonCollector<Out> collector;
@@ -40,7 +40,7 @@ public abstract class GenericSopremoMap<In extends IJsonNode, Out extends IJsonN
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public void map(final SopremoRecord record, final Collector<SopremoRecord> out) {
+	public void flatMap(final SopremoRecord record, final Collector<SopremoRecord> out) {
 		final IJsonNode input = record.getNode();
 		if (SopremoUtil.LOG.isTraceEnabled())
 			SopremoUtil.LOG.trace(String.format("%s %s", this.getContext().getOperatorDescription(), input));

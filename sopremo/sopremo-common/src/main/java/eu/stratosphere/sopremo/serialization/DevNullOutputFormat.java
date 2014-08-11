@@ -16,8 +16,8 @@ package eu.stratosphere.sopremo.serialization;
 
 import java.io.IOException;
 
-import eu.stratosphere.api.common.io.OutputFormat;
-import eu.stratosphere.configuration.Configuration;
+import org.apache.flink.api.common.io.OutputFormat;
+import org.apache.flink.configuration.Configuration;
 
 /**
  * @author arvid

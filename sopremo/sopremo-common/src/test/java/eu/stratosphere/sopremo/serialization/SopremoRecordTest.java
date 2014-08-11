@@ -16,13 +16,15 @@ package eu.stratosphere.sopremo.serialization;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
+import org.apache.flink.core.memory.InputViewDataInputStreamWrapper;
+import org.apache.flink.core.memory.OutputViewDataOutputStreamWrapper;
 import org.junit.Assert;
 import org.junit.Test;
 
-import eu.stratosphere.core.memory.DataInputViewStream;
-import eu.stratosphere.core.memory.DataOutputViewStream;
 import eu.stratosphere.sopremo.EqualCloneTest;
 import eu.stratosphere.sopremo.cache.NodeCache;
 import eu.stratosphere.sopremo.expressions.ArrayAccess;
@@ -93,17 +95,19 @@ public class SopremoRecordTest extends EqualCloneTest<SopremoRecord> {
 	private SopremoRecord serializeAndDeserialize(final IJsonNode node, final SopremoRecordLayout layout)
 			throws IOException {
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		final DataOutputViewStream daovs = new DataOutputViewStream(baos);
+		DataOutputStream dos = new DataOutputStream(baos);
+		final OutputViewDataOutputStreamWrapper daovs = new OutputViewDataOutputStreamWrapper(dos);
 		SopremoRecord serializationRecord = new SopremoRecord(layout, new DefaultTypeRegistry());
 		serializationRecord.setNode(node);
 		serializationRecord.write(daovs);
-		daovs.close();
+		dos.close();
 
 		final ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		final DataInputViewStream daivs = new DataInputViewStream(bais);
+		DataInputStream dis = new DataInputStream(bais);
+		final InputViewDataInputStreamWrapper daivs = new InputViewDataInputStreamWrapper(dis);
 		final SopremoRecord deserialized = new SopremoRecord(layout, new DefaultTypeRegistry());
 		deserialized.read(daivs);
-		daivs.close();
+		dis.close();
 
 		return deserialized;
 	}

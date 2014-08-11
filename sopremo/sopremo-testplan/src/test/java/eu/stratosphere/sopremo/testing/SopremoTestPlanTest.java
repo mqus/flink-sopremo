@@ -28,10 +28,10 @@ import java.util.regex.Pattern;
 import junit.framework.AssertionFailedError;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
+import org.apache.flink.api.java.functions.RichGroupReduceFunction.Combinable;
 import org.junit.Test;
 import org.junit.internal.ArrayComparisonFailure;
 
-import eu.stratosphere.api.java.record.operators.ReduceOperator.Combinable;
 import eu.stratosphere.sopremo.CoreFunctions;
 import eu.stratosphere.sopremo.EqualVerifyTest;
 import eu.stratosphere.sopremo.expressions.ConstantExpression;
@@ -289,8 +289,8 @@ public class SopremoTestPlanTest extends EqualVerifyTest<SopremoTestPlan> {
 	public static class CartesianProduct extends ElementaryOperator<CartesianProduct> {
 		public static class Implementation extends SopremoCross {
 			@Override
-			protected void cross(final IJsonNode value1, final IJsonNode value2, final JsonCollector<IJsonNode> out) {
-				out.collect(JsonUtil.asArray(value1, value2));
+			protected IJsonNode cross(final IJsonNode value1, final IJsonNode value2) {
+				return JsonUtil.asArray(value1, value2);
 			}
 		}
 	}

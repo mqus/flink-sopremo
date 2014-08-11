@@ -16,10 +16,10 @@ package eu.stratosphere.sopremo.execution;
 
 import java.io.IOException;
 
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheManager;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileRequest;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileResponse;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheUpdate;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheManager;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheProfileRequest;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheProfileResponse;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheUpdate;
 
 /**
  */

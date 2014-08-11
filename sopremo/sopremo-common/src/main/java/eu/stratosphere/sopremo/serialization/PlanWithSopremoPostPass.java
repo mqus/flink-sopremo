@@ -24,11 +24,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.flink.api.common.Plan;
+import org.apache.flink.api.common.operators.Operator;
+import org.apache.flink.api.common.operators.base.GenericDataSinkBase;
+
 import com.google.common.collect.Iterables;
 
-import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.api.common.operators.Operator;
-import eu.stratosphere.api.common.operators.base.GenericDataSinkBase;
 import eu.stratosphere.sopremo.io.SopremoOperatorInfoHelper;
 import eu.stratosphere.sopremo.packages.ITypeRegistry;
 import eu.stratosphere.util.IdentitySet;

@@ -14,11 +14,21 @@
  **********************************************************************************************************************/
 package eu.stratosphere.sopremo.execution;
 
-import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.core.io.IOReadableWritable;
+import org.apache.flink.core.memory.DataInputView;
+import org.apache.flink.core.memory.DataOutputView;
+import org.apache.flink.core.memory.InputViewDataInputStreamWrapper;
+import org.apache.flink.core.memory.OutputViewDataOutputStreamWrapper;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheManager;
+import org.apache.flink.runtime.jobgraph.JobID;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoCopyable;
@@ -27,12 +37,6 @@ import com.esotericsoftware.kryo.KryoSerializable;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.core.io.IOReadableWritable;
-import eu.stratosphere.core.memory.DataInputViewStream;
-import eu.stratosphere.core.memory.DataOutputViewStream;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheManager;
-import eu.stratosphere.nephele.jobgraph.JobID;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.operator.SopremoPlan;
 import eu.stratosphere.sopremo.pact.SopremoUtil;
@@ -115,7 +119,7 @@ public class ExecutionRequest implements KryoSerializable, KryoCopyable<Executio
 	 * @see eu.stratosphere.core.io.IOReadableWritable#read(java.io.DataInput)
 	 */
 	@Override
-	public void read(final DataInput in) throws IOException {
+	public void read(final DataInputView in) throws IOException {
 		this.mode = ExecutionMode.values()[in.readInt()];
 		this.configuration.read(in);
 
@@ -152,7 +156,8 @@ public class ExecutionRequest implements KryoSerializable, KryoCopyable<Executio
 	@Override
 	public void read(final Kryo kryo, final Input input) {
 		this.mode = kryo.readObject(input, ExecutionMode.class);
-		final DataInputViewStream divs = new DataInputViewStream(input);
+		DataInputStream dis = new DataInputStream(input);
+		final InputViewDataInputStreamWrapper divs = new InputViewDataInputStreamWrapper(dis);
 		try {
 			this.configuration.read(divs);
 		} catch (IOException e) {
@@ -180,7 +185,7 @@ public class ExecutionRequest implements KryoSerializable, KryoCopyable<Executio
 			}
 		}
 		try {
-			divs.close();
+			dis.close();
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
 		}
@@ -198,7 +203,7 @@ public class ExecutionRequest implements KryoSerializable, KryoCopyable<Executio
 	 * @see eu.stratosphere.core.io.IOReadableWritable#write(java.io.DataOutput)
 	 */
 	@Override
-	public void write(final DataOutput out) throws IOException {
+	public void write(final DataOutputView out) throws IOException {
 		out.writeInt(this.mode.ordinal());
 		this.configuration.write(out);
 
@@ -220,17 +225,18 @@ public class ExecutionRequest implements KryoSerializable, KryoCopyable<Executio
 	@Override
 	public void write(final Kryo kryo, final Output output) {
 		kryo.writeObject(output, this.mode);
-		final DataOutputViewStream dovs = new DataOutputViewStream(output);
+		DataOutputStream dos = new DataOutputStream(output);
+		final OutputViewDataOutputStreamWrapper dovs = new OutputViewDataOutputStreamWrapper(dos);
 		try {
 			this.configuration.write(dovs);
-			dovs.flush();
+			dos.flush();
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
 		} 
 		kryo.writeObject(output, new ArrayList<String>(this.query.getRequiredPackages()));
 		kryo.writeObject(output, this.query);
 		try {
-			dovs.close();
+			dos.close();
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
 		}

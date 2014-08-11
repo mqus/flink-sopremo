@@ -20,15 +20,11 @@ bin=`cd "$bin"; pwd`
 # get nephele config
 . "$bin"/config.sh
 
-if [ "$STRATOSPHERE_IDENT_STRING" = "" ]; then
-        STRATOSPHERE_IDENT_STRING="$USER"
-fi
-
 JVM_ARGS="$JVM_ARGS -Xmx512m"
 
-log=$STRATOSPHERE_LOG_DIR/meteor.log
-log_setting="-Dlog.file="$log" -Dlog4j.configuration=file://"$STRATOSPHERE_CONF_DIR"/log4j.properties"
+log=$FLINK_LOG_DIR/meteor.log
+log_setting="-Dlog.file="$log" -Dlog4j.configuration=file://"$FLINK_CONF_DIR"/log4j.properties"
 
-export STRATOSPHERE_CONF_DIR
+export FLINK_CONF_DIR
 
-$JAVA_HOME/bin/java $JVM_ARGS $log_setting -classpath $CLASSPATH eu.stratosphere.meteor.client.CLClient -configDir $STRATOSPHERE_CONF_DIR $*
+$JAVA_HOME/bin/java $JVM_ARGS $log_setting -classpath $CLASSPATH eu.stratosphere.meteor.client.CLClient -configDir $FLINK_CONF_DIR $*

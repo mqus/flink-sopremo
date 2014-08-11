@@ -20,5 +20,5 @@ bin=`cd "$bin"; pwd`
 . "$bin"/config.sh
 
 # Starts the sopremo server
-$STRATOSPHERE_BIN_DIR/sopremo-server.sh start
+$FLINK_BIN_DIR/sopremo-server.sh start
 

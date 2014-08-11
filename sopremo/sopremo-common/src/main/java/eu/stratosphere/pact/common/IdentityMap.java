@@ -15,15 +15,17 @@
 
 package eu.stratosphere.pact.common;
 
-import eu.stratosphere.api.common.functions.AbstractFunction;
-import eu.stratosphere.api.common.functions.GenericMap;
-import eu.stratosphere.configuration.Configuration;
+import org.apache.flink.api.common.functions.AbstractRichFunction;
+import org.apache.flink.api.common.functions.GenericCollectorMap;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.configuration.Configuration;
+
 import eu.stratosphere.sopremo.serialization.SopremoRecord;
 
 /**
  * Trivial PACT stub which emits the pairs without modifications.
  */
-public class IdentityMap extends AbstractFunction implements GenericMap<SopremoRecord, SopremoRecord> {
+public class IdentityMap extends AbstractRichFunction implements MapFunction<SopremoRecord, SopremoRecord> {
 	/**
 	 * 
 	 */

@@ -17,10 +17,10 @@ package eu.stratosphere.sopremo.execution;
 
 import java.io.IOException;
 
-import eu.stratosphere.core.protocols.VersionedProtocol;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileRequest;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileResponse;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheUpdate;
+import org.apache.flink.core.protocols.VersionedProtocol;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheProfileRequest;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheProfileResponse;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheUpdate;
 
 /**
  * The library transfer protocol allows to query servers for cached libraries and submit these if necessary.

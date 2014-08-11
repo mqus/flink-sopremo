@@ -5,11 +5,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
+import org.apache.flink.api.common.io.FormatUtil;
+import org.apache.flink.configuration.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 
-import eu.stratosphere.api.common.io.FormatUtil;
-import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.io.JsonFormat.JsonInputFormat;
 import eu.stratosphere.sopremo.io.SopremoFormat.SopremoFileInputFormat;

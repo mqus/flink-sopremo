@@ -30,14 +30,14 @@ import java.util.Set;
 
 import junit.framework.AssertionFailedError;
 
+import org.apache.flink.client.minicluster.NepheleMiniCluster;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheProfileRequest;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheProfileResponse;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheUpdate;
 import org.apache.hadoop.fs.FileSystem;
 import org.junit.Assert;
 import org.junit.Ignore;
 
-import eu.stratosphere.client.minicluster.NepheleMiniCluster;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileRequest;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileResponse;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheUpdate;
 import eu.stratosphere.nephele.rpc.RPCService;
 import eu.stratosphere.sopremo.execution.ExecutionRequest;
 import eu.stratosphere.sopremo.execution.ExecutionResponse;

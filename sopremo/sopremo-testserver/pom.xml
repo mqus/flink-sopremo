@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>sopremo</artifactId>
 		<groupId>eu.stratosphere</groupId>
-		<version>0.5-SNAPSHOT</version>
+		<version>0.6-SNAPSHOT</version>
 	</parent>
 	<artifactId>sopremo-testserver</artifactId>
 	<name>sopremo-testserver</name>
@@ -37,8 +37,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>eu.stratosphere</groupId>
-			<artifactId>stratosphere-clients</artifactId>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-clients</artifactId>
 			<version>${core.version}</version>
 		</dependency>
 	</dependencies>

@@ -2,11 +2,11 @@ package eu.stratosphere.meteor.client;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.flink.configuration.ConfigConstants;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.GlobalConfiguration;
 import org.eclipse.jetty.server.Server;
 
-import eu.stratosphere.configuration.ConfigConstants;
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.configuration.GlobalConfiguration;
 import eu.stratosphere.meteor.client.common.MeteorContextHandler;
 
 /**
@@ -61,7 +61,7 @@ public class WebFrontend {
 		final Configuration config = GlobalConfiguration.getConfiguration();
 
 		// add stratosphere base dir to config
-		config.setString(ConfigConstants.STRATOSPHERE_BASE_DIR_PATH_KEY, configDir + "/..");
+		config.setString(ConfigConstants.FLINK_BASE_DIR_PATH_KEY, configDir + "/..");
 		if (resourceDir != null)
 			config.setString(RESOURCEDIR, resourceDir);
 

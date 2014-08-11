@@ -19,9 +19,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 
-import eu.stratosphere.api.common.io.GenericInputFormat;
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.core.io.GenericInputSplit;
+import org.apache.flink.api.common.io.GenericInputFormat;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.core.io.GenericInputSplit;
+
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.sopremo.pact.SopremoUtil;
 import eu.stratosphere.sopremo.serialization.SopremoRecord;

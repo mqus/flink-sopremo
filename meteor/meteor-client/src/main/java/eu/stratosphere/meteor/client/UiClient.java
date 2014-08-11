@@ -29,7 +29,8 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 
-import eu.stratosphere.configuration.GlobalConfiguration;
+import org.apache.flink.configuration.GlobalConfiguration;
+
 import eu.stratosphere.meteor.QueryParser;
 import eu.stratosphere.sopremo.client.DefaultClient;
 import eu.stratosphere.sopremo.client.StateListener;

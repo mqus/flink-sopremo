@@ -14,11 +14,11 @@
  **********************************************************************************************************************/
 package eu.stratosphere.sopremo.execution;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
-import eu.stratosphere.core.io.IOReadableWritable;
+import org.apache.flink.core.io.IOReadableWritable;
+import org.apache.flink.core.memory.DataInputView;
+import org.apache.flink.core.memory.DataOutputView;
 
 /**
  * A response from a {@link SopremoExecutionProtocol} that reflects the state of a job.
@@ -85,7 +85,7 @@ public class ExecutionResponse implements IOReadableWritable {
 	 * @see eu.stratosphere.core.io.IOReadableWritable#read(java.io.DataInput)
 	 */
 	@Override
-	public void read(final DataInput in) throws IOException {
+	public void read(final DataInputView in) throws IOException {
 		this.jobId = new SopremoID();
 		this.jobId.read(in);
 		this.state = ExecutionState.values()[in.readInt()];
@@ -97,7 +97,7 @@ public class ExecutionResponse implements IOReadableWritable {
 	 * @see eu.stratosphere.core.io.IOReadableWritable#write(java.io.DataOutput)
 	 */
 	@Override
-	public void write(final DataOutput out) throws IOException {
+	public void write(final DataOutputView out) throws IOException {
 		this.jobId.write(out);
 		out.writeInt(this.state.ordinal());
 		out.writeUTF(this.details);

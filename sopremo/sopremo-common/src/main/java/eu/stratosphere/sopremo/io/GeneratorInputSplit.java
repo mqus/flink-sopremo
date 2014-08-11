@@ -14,10 +14,10 @@
  **********************************************************************************************************************/
 package eu.stratosphere.sopremo.io;
 
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.configuration.GlobalConfiguration;
-import eu.stratosphere.core.io.GenericInputSplit;
-import eu.stratosphere.nephele.jobmanager.splitassigner.DefaultInputSplitAssigner;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.GlobalConfiguration;
+import org.apache.flink.core.io.GenericInputSplit;
+import org.apache.flink.runtime.jobmanager.splitassigner.DefaultInputSplitAssigner;
 
 public class GeneratorInputSplit extends GenericInputSplit {
 

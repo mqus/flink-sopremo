@@ -1,17 +1,17 @@
 package eu.stratosphere.sopremo.pact;
 
+import org.apache.flink.api.common.functions.AbstractRichFunction;
+import org.apache.flink.api.common.functions.CrossFunction;
+import org.apache.flink.configuration.Configuration;
+
 import com.google.common.reflect.TypeToken;
 
-import eu.stratosphere.api.common.functions.AbstractFunction;
-import eu.stratosphere.api.common.functions.GenericCrosser;
-import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.sopremo.type.IJsonNode;
 import eu.stratosphere.sopremo.type.IObjectNode;
 import eu.stratosphere.sopremo.type.typed.TypedObjectNode;
-import eu.stratosphere.util.Collector;
 
 /**
  * An abstract implementation of the {@link GenericCrosser}. SopremoCross provides the functionality to convert the
@@ -19,8 +19,8 @@ import eu.stratosphere.util.Collector;
  * {@link IJsonNode}).
  */
 public abstract class GenericSopremoCross<Left extends IJsonNode, Right extends IJsonNode, Out extends IJsonNode>
-		extends AbstractFunction
-		implements GenericCrosser<SopremoRecord, SopremoRecord, SopremoRecord>, SopremoFunction {
+		extends AbstractRichFunction
+		implements CrossFunction<SopremoRecord, SopremoRecord, SopremoRecord>, SopremoFunction {
 	private EvaluationContext context;
 
 	private JsonCollector<Out> collector;
@@ -34,20 +34,21 @@ public abstract class GenericSopremoCross<Left extends IJsonNode, Right extends 
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public void cross(final SopremoRecord record1, final SopremoRecord record2, final Collector<SopremoRecord> out) {
-		this.collector.configure(out);
+	public SopremoRecord cross(final SopremoRecord record1, final SopremoRecord record2) {
 		final IJsonNode input1 = record1.getNode();
 		final IJsonNode input2 = record2.getNode();
 
 		if (SopremoUtil.LOG.isTraceEnabled())
 			SopremoUtil.LOG.trace(String.format("%s %s/%s", this.getContext().getOperatorDescription(), input1, input2));
 		try {
-			this.cross(
+			Out result = cross(
 				(Left) (this.typedInputNode1 == null ? input1
 					: this.typedInputNode1.withBackingNode((IObjectNode) input1)),
 				(Right) (this.typedInputNode2 == null ? input2
-					: this.typedInputNode2.withBackingNode((IObjectNode) input2)),
-				this.collector);
+					: this.typedInputNode2.withBackingNode((IObjectNode) input2)));
+			if(result == null)
+				return null;
+			return this.collector.wrap(result);
 		} catch (final RuntimeException e) {
 			SopremoUtil.LOG.error(String.format("Error occurred @ %s with v1 %s/%s v2: %s", this.getContext()
 				.getOperatorDescription(), input1, input2, e));
@@ -87,5 +88,5 @@ public abstract class GenericSopremoCross<Left extends IJsonNode, Right extends 
 	 * @param out
 	 *        a collector that collects all output pairs
 	 */
-	protected abstract void cross(Left value1, Right value2, JsonCollector<Out> out);
+	protected abstract Out cross(Left value1, Right value2);
 }

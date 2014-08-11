@@ -1,12 +1,12 @@
 package eu.stratosphere.sopremo.pact;
 
-import java.util.Iterator;
+import org.apache.flink.api.common.functions.AbstractRichFunction;
+import org.apache.flink.api.common.functions.CoGroupFunction;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.util.Collector;
 
 import com.google.common.reflect.TypeToken;
 
-import eu.stratosphere.api.common.functions.AbstractFunction;
-import eu.stratosphere.api.common.functions.GenericCoGrouper;
-import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.serialization.SopremoRecord;
@@ -15,7 +15,6 @@ import eu.stratosphere.sopremo.type.IJsonNode;
 import eu.stratosphere.sopremo.type.IStreamNode;
 import eu.stratosphere.sopremo.type.StreamNode;
 import eu.stratosphere.sopremo.type.typed.TypedObjectNode;
-import eu.stratosphere.util.Collector;
 
 /**
  * An abstract implementation of the {@link GenericCoGrouper}. SopremoCoGroup provides the functionality to convert the
@@ -23,8 +22,8 @@ import eu.stratosphere.util.Collector;
  * {@link IStreamNode}).
  */
 public abstract class GenericSopremoCoGroup<LeftElem extends IJsonNode, RightElem extends IJsonNode, Out extends IJsonNode>
-		extends AbstractFunction
-		implements GenericCoGrouper<SopremoRecord, SopremoRecord, SopremoRecord>, SopremoFunction {
+		extends AbstractRichFunction
+		implements CoGroupFunction<SopremoRecord, SopremoRecord, SopremoRecord>, SopremoFunction {
 	private EvaluationContext context;
 
 	private JsonCollector<Out> collector;
@@ -39,15 +38,14 @@ public abstract class GenericSopremoCoGroup<LeftElem extends IJsonNode, RightEle
 
 	/*
 	 * (non-Javadoc)
-	 * @see eu.stratosphere.api.record.functions.CoGroupFunction#coGroup(java.util.Iterator, java.util.Iterator,
-	 * eu.stratosphere.api.record.functions.Collector)
+	 * @see org.apache.flink.api.common.functions.CoGroupFunction#coGroup(java.lang.Iterable, java.lang.Iterable,
+	 * org.apache.flink.util.Collector)
 	 */
 	@Override
-	public void coGroup(final Iterator<SopremoRecord> records1, final Iterator<SopremoRecord> records2,
-			final Collector<SopremoRecord> out) {
+	public void coGroup(Iterable<SopremoRecord> records1, Iterable<SopremoRecord> records2, Collector<SopremoRecord> out) {
 		this.collector.configure(out);
-		this.cachedIterator1.setIterator(records1);
-		this.cachedIterator2.setIterator(records2);
+		this.cachedIterator1.setIterator(records1.iterator());
+		this.cachedIterator2.setIterator(records2.iterator());
 		try {
 			if (SopremoUtil.DEBUG && SopremoUtil.LOG.isTraceEnabled()) {
 				final ArrayNode<LeftElem> leftArray = new ArrayNode<LeftElem>(this.leftArray);
@@ -66,37 +64,37 @@ public abstract class GenericSopremoCoGroup<LeftElem extends IJsonNode, RightEle
 		}
 	}
 
-//	/**
-//	 * This method must be overridden by CoGoup UDFs that want to make use of the combining feature
-//	 * on their first input. In addition, the extending class must be annotated as CombinableFirst.
-//	 * <p>
-//	 * The use of the combiner is typically a pre-reduction of the data.
-//	 * 
-//	 * @param records
-//	 *        The records to be combined.
-//	 * @param out
-//	 *        The collector to write the result to.
-//	 */
-//	@Override
-//	public void combineFirst(final Iterator<SopremoRecord> records, final Collector<SopremoRecord> out) {
-//		throw new UnsupportedOperationException();
-//	}
-//
-//	/**
-//	 * This method must be overridden by CoGoup UDFs that want to make use of the combining feature
-//	 * on their second input. In addition, the extending class must be annotated as CombinableSecond.
-//	 * <p>
-//	 * The use of the combiner is typically a pre-reduction of the data.
-//	 * 
-//	 * @param records
-//	 *        The records to be combined.
-//	 * @param out
-//	 *        The collector to write the result to.
-//	 */
-//	@Override
-//	public void combineSecond(final Iterator<SopremoRecord> records, final Collector<SopremoRecord> out) {
-//		throw new UnsupportedOperationException();
-//	}
+	// /**
+	// * This method must be overridden by CoGoup UDFs that want to make use of the combining feature
+	// * on their first input. In addition, the extending class must be annotated as CombinableFirst.
+	// * <p>
+	// * The use of the combiner is typically a pre-reduction of the data.
+	// *
+	// * @param records
+	// * The records to be combined.
+	// * @param out
+	// * The collector to write the result to.
+	// */
+	// @Override
+	// public void combineFirst(final Iterator<SopremoRecord> records, final Collector<SopremoRecord> out) {
+	// throw new UnsupportedOperationException();
+	// }
+	//
+	// /**
+	// * This method must be overridden by CoGoup UDFs that want to make use of the combining feature
+	// * on their second input. In addition, the extending class must be annotated as CombinableSecond.
+	// * <p>
+	// * The use of the combiner is typically a pre-reduction of the data.
+	// *
+	// * @param records
+	// * The records to be combined.
+	// * @param out
+	// * The collector to write the result to.
+	// */
+	// @Override
+	// public void combineSecond(final Iterator<SopremoRecord> records, final Collector<SopremoRecord> out) {
+	// throw new UnsupportedOperationException();
+	// }
 
 	@Override
 	public final EvaluationContext getContext() {

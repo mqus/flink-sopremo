@@ -1,7 +1,15 @@
 package eu.stratosphere.sopremo.base;
 
+import static eu.stratosphere.sopremo.type.JsonUtil.createPath;
+import static eu.stratosphere.sopremo.type.JsonUtil.createObjectNode;
+
 import org.junit.Test;
 
+import eu.stratosphere.sopremo.expressions.BinaryBooleanExpression;
+import eu.stratosphere.sopremo.expressions.ComparativeExpression;
+import eu.stratosphere.sopremo.expressions.ObjectAccess;
+import eu.stratosphere.sopremo.expressions.ObjectCreation;
+import eu.stratosphere.sopremo.expressions.ComparativeExpression.BinaryOperator;
 import eu.stratosphere.sopremo.testing.SopremoOperatorTestBase;
 import eu.stratosphere.sopremo.testing.SopremoTestPlan;
 
@@ -103,6 +111,33 @@ public class UnionAllTest extends SopremoOperatorTestBase<UnionAll> {
 			addValue(1).
 			addValue(2);
 
+		sopremoPlan.run();
+	}
+
+	@Test
+	public void shouldPerformTwoWayBagUnionWithJoin() {
+		final SopremoTestPlan sopremoPlan = new SopremoTestPlan(2, 2);
+
+		final UnionAll union = new UnionAll().withInputs(sopremoPlan.getInputOperators(0, 2));
+		final Grouping grouping1 = new Grouping().withGroupingKey(new ObjectAccess("key1")).withInputs(union);
+		final Grouping grouping2 = new Grouping().withGroupingKey(new ObjectAccess("key2")).withInputs(union);
+		union.setInputs(sopremoPlan.getInputOperators(0, 2));
+
+		sopremoPlan.getOutputOperator(0).setInputs(grouping1);
+		sopremoPlan.getOutputOperator(1).setInputs(grouping2);
+
+		sopremoPlan.getInput(0).
+			addObject("key1", "A", "key2", "2").
+			addObject("key1", "B", "key2", "1");
+		sopremoPlan.getInput(1).
+			addObject("key1", "A", "key2", "2").
+			addObject("key1", "B", "key2", "1");
+		sopremoPlan.getExpectedOutput(0).
+			addArray(createObjectNode("key1", "A", "key2", "2"), createObjectNode("key1", "A", "key2", "1")).
+			addArray(createObjectNode("key1", "B", "key2", "2"), createObjectNode("key1", "B", "key2", "1"));
+		sopremoPlan.getExpectedOutput(1).
+			addArray(createObjectNode("key1", "A", "key2", "1"), createObjectNode("key1", "B", "key2", "1")).
+			addArray(createObjectNode("key1", "A", "key2", "2"), createObjectNode("key1", "B", "key2", "2"));
 		sopremoPlan.run();
 	}
 

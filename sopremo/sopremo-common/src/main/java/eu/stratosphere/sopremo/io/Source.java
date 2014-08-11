@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import eu.stratosphere.api.common.io.InputFormat;
-import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
+import org.apache.flink.api.common.io.InputFormat;
+import org.apache.flink.api.common.operators.base.GenericDataSourceBase;
+
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.expressions.ArrayCreation;

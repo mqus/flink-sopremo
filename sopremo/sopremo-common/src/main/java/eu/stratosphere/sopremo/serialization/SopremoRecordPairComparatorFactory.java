@@ -15,9 +15,9 @@
 
 package eu.stratosphere.sopremo.serialization;
 
-import eu.stratosphere.api.common.typeutils.TypeComparator;
-import eu.stratosphere.api.common.typeutils.TypePairComparator;
-import eu.stratosphere.api.common.typeutils.TypePairComparatorFactory;
+import org.apache.flink.api.common.typeutils.TypeComparator;
+import org.apache.flink.api.common.typeutils.TypePairComparator;
+import org.apache.flink.api.common.typeutils.TypePairComparatorFactory;
 
 public class SopremoRecordPairComparatorFactory implements TypePairComparatorFactory<SopremoRecord, SopremoRecord> {
 	private static final SopremoRecordPairComparatorFactory INSTANCE = new SopremoRecordPairComparatorFactory();

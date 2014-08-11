@@ -1,17 +1,18 @@
 package eu.stratosphere.sopremo.pact;
 
+import org.apache.flink.api.common.functions.AbstractRichFunction;
+import org.apache.flink.api.common.functions.FlatJoinFunction;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.util.Collector;
+
 import com.google.common.reflect.TypeToken;
 
-import eu.stratosphere.api.common.functions.AbstractFunction;
-import eu.stratosphere.api.common.functions.GenericJoiner;
-import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.serialization.SopremoRecord;
 import eu.stratosphere.sopremo.type.IJsonNode;
 import eu.stratosphere.sopremo.type.IObjectNode;
 import eu.stratosphere.sopremo.type.typed.TypedObjectNode;
-import eu.stratosphere.util.Collector;
 
 /**
  * An abstract implementation of the {@link GenericJoiner}. SopremoJoin provides the functionality to convert the
@@ -19,8 +20,8 @@ import eu.stratosphere.util.Collector;
  * {@link IJsonNode}).
  */
 public abstract class GenericSopremoJoin<Left extends IJsonNode, Right extends IJsonNode, Out extends IJsonNode>
-		extends AbstractFunction
-		implements GenericJoiner<SopremoRecord, SopremoRecord, SopremoRecord>, SopremoFunction {
+		extends AbstractRichFunction
+		implements FlatJoinFunction<SopremoRecord, SopremoRecord, SopremoRecord>, SopremoFunction {
 	private EvaluationContext context;
 
 	private JsonCollector<Out> collector;

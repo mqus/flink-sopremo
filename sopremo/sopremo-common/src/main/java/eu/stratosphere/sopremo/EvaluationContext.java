@@ -20,9 +20,10 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import org.apache.flink.core.fs.Path;
+
 import com.esotericsoftware.kryo.Kryo;
 
-import eu.stratosphere.core.fs.Path;
 import eu.stratosphere.sopremo.expressions.EvaluationExpression;
 import eu.stratosphere.sopremo.packages.DefaultNameChooserProvider;
 import eu.stratosphere.sopremo.packages.NameChooserProvider;

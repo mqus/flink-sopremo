@@ -20,10 +20,16 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
+import org.apache.flink.configuration.ConfigConstants;
+import org.apache.flink.configuration.GlobalConfiguration;
 
-import eu.stratosphere.configuration.ConfigConstants;
-import eu.stratosphere.configuration.GlobalConfiguration;
 import eu.stratosphere.meteor.QueryParser;
 import eu.stratosphere.sopremo.client.DefaultClient;
 import eu.stratosphere.sopremo.client.StateListener;
@@ -152,12 +158,12 @@ public class CLClient {
 		if (cmd.hasOption('d')) 
 			this.sopremoClient.getJobConfig().setInteger(ConfigConstants.DEFAULT_PARALLELIZATION_DEGREE_KEY,
 				parseInt(cmd, 'd'));
-		if (cmd.hasOption('i')) 
-			this.sopremoClient.getJobConfig().setInteger(ConfigConstants.PARALLELIZATION_MAX_INTRA_NODE_DEGREE_KEY,
-				parseInt(cmd, 'i'));
-		if (cmd.hasOption('m')) 
-			this.sopremoClient.getJobConfig().setInteger(SopremoJobInfo.MAX_MACHINES,
-				parseInt(cmd, 'm'));
+//		if (cmd.hasOption('i')) 
+//			this.sopremoClient.getJobConfig().setInteger(ConfigConstants.PARALLELIZATION_MAX_INTRA_NODE_DEGREE_KEY,
+//				parseInt(cmd, 'i'));
+//		if (cmd.hasOption('m')) 
+//			this.sopremoClient.getJobConfig().setInteger(SopremoJobInfo.MAX_MACHINES,
+//				parseInt(cmd, 'm'));
 	}
 
 	private int parseInt(CommandLine cmd, char c) {

@@ -20,24 +20,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import eu.stratosphere.core.fs.Path;
-import eu.stratosphere.nephele.client.AbstractJobResult;
-import eu.stratosphere.nephele.client.JobCancelResult;
-import eu.stratosphere.nephele.client.JobProgressResult;
-import eu.stratosphere.nephele.client.JobSubmissionResult;
-import eu.stratosphere.nephele.event.job.JobEvent;
-import eu.stratosphere.nephele.event.job.VertexEvent;
-import eu.stratosphere.nephele.execution.ExecutionState;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileRequest;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileResponse;
-import eu.stratosphere.nephele.execution.librarycache.LibraryCacheUpdate;
-import eu.stratosphere.nephele.jobgraph.JobGraph;
-import eu.stratosphere.nephele.jobgraph.JobID;
-import eu.stratosphere.nephele.jobgraph.JobStatus;
-import eu.stratosphere.nephele.jobgraph.JobVertexID;
-import eu.stratosphere.runtime.io.channels.ChannelID;
-import eu.stratosphere.runtime.io.channels.ChannelType;
-import eu.stratosphere.runtime.io.gates.GateID;
+import org.apache.flink.core.fs.Path;
+import org.apache.flink.runtime.client.AbstractJobResult;
+import org.apache.flink.runtime.client.JobCancelResult;
+import org.apache.flink.runtime.client.JobProgressResult;
+import org.apache.flink.runtime.client.JobSubmissionResult;
+import org.apache.flink.runtime.event.job.JobEvent;
+import org.apache.flink.runtime.event.job.VertexEvent;
+import org.apache.flink.runtime.execution.ExecutionState;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheProfileRequest;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheProfileResponse;
+import org.apache.flink.runtime.execution.librarycache.LibraryCacheUpdate;
+import org.apache.flink.runtime.io.network.channels.ChannelID;
+import org.apache.flink.runtime.io.network.channels.ChannelType;
+import org.apache.flink.runtime.io.network.gates.GateID;
+import org.apache.flink.runtime.jobgraph.JobGraph;
+import org.apache.flink.runtime.jobgraph.JobID;
+import org.apache.flink.runtime.jobgraph.JobStatus;
+import org.apache.flink.runtime.jobgraph.JobVertexID;
 
 /**
  * This utility class provides a list of types frequently used by the RPC protocols included in this package.

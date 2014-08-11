@@ -74,14 +74,15 @@ public class Join extends CompositeOperator<Join> {
 	public void addImplementation(final SopremoModule module) {
 		switch (this.binaryConditions.size()) {
 		case 0:
-			final ThetaJoin cross = new ThetaJoin().withCondition(new UnaryExpression(new ConstantExpression(true))).
+			final ThetaJoin cross = new ThetaJoin().withName(getName()).
+				withCondition(new UnaryExpression(new ConstantExpression(true))).
 				withInputs(module.getInputs()).
 				withResultProjection(this.getResultProjection());
 			module.getOutput(0).setInput(0, cross);
 			break;
 		case 1:
 			// only two way join
-			final TwoSourceJoin join = new TwoSourceJoin().
+			final TwoSourceJoin join = new TwoSourceJoin().withName(getName()).
 				withOuterJoinIndices(this.outerJoinSources.toIntArray()).
 				withInputs(module.getInputs()).
 				withCondition(this.binaryConditions.get(0)).
@@ -104,6 +105,7 @@ public class Join extends CompositeOperator<Join> {
 
 			// rewire individual joins
 			// the input of each join is either the module input or the result of a previous join
+			int joinIndex = 0;
 			for (final TwoSourceJoin twoSourceJoin : joins) {
 				final List<JsonStream> operatorInputs = twoSourceJoin.getInputs();
 
@@ -121,6 +123,7 @@ public class Join extends CompositeOperator<Join> {
 				}
 				twoSourceJoin.setInputs(actualInputs);
 				twoSourceJoin.setResultProjection(new AggregationExpression(new ArrayUnion()));
+				twoSourceJoin.setName(getName() + joinIndex++); 
 			}
 
 			JsonStream lastOperator = inputs[0];
@@ -155,7 +158,7 @@ public class Join extends CompositeOperator<Join> {
 			resultProjection.replace(Predicates.instanceOf(InputSelection.class),
 				new ReplaceInputSelectionWithArray());
 			module.getOutput(0).setInput(0,
-				new Projection().withInputs(lastOperator).withResultProjection(resultProjection));
+				new Projection().withName(getName() + " Projection").withInputs(lastOperator).withResultProjection(resultProjection));
 		}
 	}
 

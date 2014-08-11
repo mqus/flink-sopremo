@@ -20,49 +20,55 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+
+import org.apache.flink.api.common.distributions.DataDistribution;
+import org.apache.flink.api.common.operators.DualInputOperator;
+import org.apache.flink.api.common.operators.Order;
+import org.apache.flink.api.common.operators.Ordering;
+import org.apache.flink.api.common.operators.SingleInputOperator;
+import org.apache.flink.api.common.operators.base.CoGroupOperatorBase;
+import org.apache.flink.api.common.operators.base.GenericDataSinkBase;
+import org.apache.flink.api.common.operators.base.GroupReduceOperatorBase;
+import org.apache.flink.api.common.operators.base.MapOperatorBase;
+import org.apache.flink.api.common.operators.util.FieldList;
+import org.apache.flink.api.common.typeutils.TypeComparatorFactory;
+import org.apache.flink.api.common.typeutils.TypePairComparatorFactory;
+import org.apache.flink.api.common.typeutils.TypeSerializerFactory;
+import org.apache.flink.compiler.CompilerException;
+import org.apache.flink.compiler.CompilerPostPassException;
+import org.apache.flink.compiler.dag.MapNode;
+import org.apache.flink.compiler.dag.TempMode;
+import org.apache.flink.compiler.dataproperties.GlobalProperties;
+import org.apache.flink.compiler.dataproperties.LocalProperties;
+import org.apache.flink.compiler.dataproperties.RequestedGlobalProperties;
+import org.apache.flink.compiler.dataproperties.RequestedLocalProperties;
+import org.apache.flink.compiler.operators.MapDescriptor;
+import org.apache.flink.compiler.plan.Channel;
+import org.apache.flink.compiler.plan.DualInputPlanNode;
+import org.apache.flink.compiler.plan.NAryUnionPlanNode;
+import org.apache.flink.compiler.plan.OptimizedPlan;
+import org.apache.flink.compiler.plan.PlanNode;
+import org.apache.flink.compiler.plan.SingleInputPlanNode;
+import org.apache.flink.compiler.plan.SinkPlanNode;
+import org.apache.flink.compiler.plan.SourcePlanNode;
+import org.apache.flink.compiler.plan.WorksetIterationPlanNode;
+import org.apache.flink.compiler.postpass.ConflictingFieldTypeInfoException;
+import org.apache.flink.compiler.postpass.GenericFlatTypePostPass;
+import org.apache.flink.compiler.postpass.MissingFieldTypeInfoException;
+import org.apache.flink.runtime.operators.shipping.ShipStrategyType;
+import org.apache.flink.runtime.operators.util.LocalStrategy;
+import org.apache.flink.util.Visitor;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
-import eu.stratosphere.api.common.distributions.DataDistribution;
-import eu.stratosphere.api.common.operators.DualInputOperator;
-import eu.stratosphere.api.common.operators.Order;
-import eu.stratosphere.api.common.operators.Ordering;
-import eu.stratosphere.api.common.operators.SingleInputOperator;
-import eu.stratosphere.api.common.operators.base.CoGroupOperatorBase;
-import eu.stratosphere.api.common.operators.base.GenericDataSinkBase;
-import eu.stratosphere.api.common.operators.base.GroupReduceOperatorBase;
-import eu.stratosphere.api.common.operators.base.MapOperatorBase;
-import eu.stratosphere.api.common.operators.util.FieldList;
-import eu.stratosphere.api.common.typeutils.TypeComparatorFactory;
-import eu.stratosphere.api.common.typeutils.TypePairComparatorFactory;
-import eu.stratosphere.api.common.typeutils.TypeSerializerFactory;
-import eu.stratosphere.compiler.CompilerException;
-import eu.stratosphere.compiler.CompilerPostPassException;
-import eu.stratosphere.compiler.dag.MapNode;
-import eu.stratosphere.compiler.dag.TempMode;
-import eu.stratosphere.compiler.dataproperties.GlobalProperties;
-import eu.stratosphere.compiler.dataproperties.LocalProperties;
-import eu.stratosphere.compiler.operators.MapDescriptor;
-import eu.stratosphere.compiler.plan.Channel;
-import eu.stratosphere.compiler.plan.DualInputPlanNode;
-import eu.stratosphere.compiler.plan.NAryUnionPlanNode;
-import eu.stratosphere.compiler.plan.OptimizedPlan;
-import eu.stratosphere.compiler.plan.PlanNode;
-import eu.stratosphere.compiler.plan.SingleInputPlanNode;
-import eu.stratosphere.compiler.plan.SinkPlanNode;
-import eu.stratosphere.compiler.plan.WorksetIterationPlanNode;
-import eu.stratosphere.compiler.postpass.ConflictingFieldTypeInfoException;
-import eu.stratosphere.compiler.postpass.GenericFlatTypePostPass;
-import eu.stratosphere.compiler.postpass.MissingFieldTypeInfoException;
 import eu.stratosphere.pact.common.IdentityMap;
-import eu.stratosphere.pact.runtime.shipping.ShipStrategyType;
-import eu.stratosphere.pact.runtime.task.util.LocalStrategy;
 import eu.stratosphere.sopremo.io.SopremoOperatorInfoHelper;
 import eu.stratosphere.sopremo.packages.ITypeRegistry;
 import eu.stratosphere.sopremo.type.IJsonNode;
+import eu.stratosphere.util.IdentitySet;
 import eu.stratosphere.util.reflect.ReflectUtil;
 
 /**
@@ -73,7 +79,7 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 
 	private ITypeRegistry typeRegistry;
 
-	public final static boolean PRUNE_LAYOUT = false;
+	public final static boolean PRUNE_LAYOUT = true;
 
 	{
 		this.setPropagateParentSchemaDown(false);
@@ -99,35 +105,37 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 		if (PRUNE_LAYOUT)
 			this.addIdentityMapsToOutputsWithMultipleChannels(plan);
 	}
-//
-//	/*
-//	 * (non-Javadoc)
-//	 * @see
-//	 * eu.stratosphere.compiler.postpass.GenericRecordPostPass#traverse(eu.stratosphere.compiler.dag.candidate
-//	 * .PlanNode, eu.stratosphere.compiler.postpass.AbstractSchema, boolean)
-//	 */
-//	@Override
-//	protected void traverse(final PlanNode node, final SopremoRecordSchema parentSchema, final boolean createUtilities) {
-//		// FIXME: workaround for Stratosphere #206
-//		if (node instanceof SourcePlanNode)
-//			((SourcePlanNode) node).setSerializer(createSerializer(new SopremoRecordSchema()));
-//		else if (node instanceof SinkPlanNode)
-//			this.setOrdering(((SingleInputPlanNode) node).getInput(),
-//				((GenericDataSinkBase<?>) node.getPactContract()).getLocalOrder());
-//		else if (node.getPactContract() instanceof SopremoReduceOperator)
-//			this.setOrdering(((SingleInputPlanNode) node).getInput(),
-//				((SopremoReduceOperator) node.getPactContract()).getInnerGroupOrder());
-//		else if (node.getPactContract() instanceof SopremoGroupReduceOperator)
-//			this.setOrdering(((SingleInputPlanNode) node).getInput(),
-//				((SopremoGroupReduceOperator) node.getPactContract()).getInnerGroupOrder());
-//		else if (node.getPactContract() instanceof SopremoCoGroupOperator) {
-//			this.setOrdering(((DualInputPlanNode) node).getInput1(),
-//				((SopremoCoGroupOperator) node.getPactContract()).getFirstInnerGroupOrdering());
-//			this.setOrdering(((DualInputPlanNode) node).getInput2(),
-//				((SopremoCoGroupOperator) node.getPactContract()).getSecondInnerGroupOrdering());
-//		}
-//		super.traverse(node, parentSchema, createUtilities);
-//	}
+
+	//
+	// /*
+	// * (non-Javadoc)
+	// * @see
+	// * eu.stratosphere.compiler.postpass.GenericRecordPostPass#traverse(eu.stratosphere.compiler.dag.candidate
+	// * .PlanNode, eu.stratosphere.compiler.postpass.AbstractSchema, boolean)
+	// */
+	// @Override
+	// protected void traverse(final PlanNode node, final SopremoRecordSchema parentSchema, final boolean
+	// createUtilities) {
+	// // FIXME: workaround for Stratosphere #206
+	// if (node instanceof SourcePlanNode)
+	// ((SourcePlanNode) node).setSerializer(createSerializer(new SopremoRecordSchema()));
+	// else if (node instanceof SinkPlanNode)
+	// this.setOrdering(((SingleInputPlanNode) node).getInput(),
+	// ((GenericDataSinkBase<?>) node.getPactContract()).getLocalOrder());
+	// else if (node.getPactContract() instanceof SopremoReduceOperator)
+	// this.setOrdering(((SingleInputPlanNode) node).getInput(),
+	// ((SopremoReduceOperator) node.getPactContract()).getInnerGroupOrder());
+	// else if (node.getPactContract() instanceof SopremoGroupReduceOperator)
+	// this.setOrdering(((SingleInputPlanNode) node).getInput(),
+	// ((SopremoGroupReduceOperator) node.getPactContract()).getInnerGroupOrder());
+	// else if (node.getPactContract() instanceof SopremoCoGroupOperator) {
+	// this.setOrdering(((DualInputPlanNode) node).getInput1(),
+	// ((SopremoCoGroupOperator) node.getPactContract()).getFirstInnerGroupOrdering());
+	// this.setOrdering(((DualInputPlanNode) node).getInput2(),
+	// ((SopremoCoGroupOperator) node.getPactContract()).getSecondInnerGroupOrdering());
+	// }
+	// super.traverse(node, parentSchema, createUtilities);
+	// }
 
 	/*
 	 * (non-Javadoc)
@@ -148,6 +156,39 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 			return new SopremoRecordComparatorFactory(this.layout.project(usedKeys), this.typeRegistry, sortFields, directions);
 		}
 		return new SopremoRecordComparatorFactory(this.layout, this.typeRegistry, fields.toArray(), directions);
+	}
+
+	private Set<PlanNode> visited = new IdentitySet<PlanNode>();
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.apache.flink.compiler.postpass.GenericFlatTypePostPass#traverse(org.apache.flink.compiler.plan.PlanNode,
+	 * org.apache.flink.compiler.postpass.AbstractSchema, boolean)
+	 */
+	@Override
+	protected void traverse(PlanNode node, SopremoRecordSchema parentSchema, boolean createUtilities) {
+		if (!this.visited.add(node))
+			return;
+		if (node instanceof NAryUnionPlanNode) {
+			// only propagate the info down
+			// for (Channel channel : node.getInputs()) {
+			// FieldList partitioningFields = node.getGlobalProperties().getPartitioningFields();
+			// if (partitioningFields != null)
+			// for (int i = 0; i < partitioningFields.size(); i++)
+			// parentSchema.add(partitioningFields.get(i));
+			// }
+
+			FieldList groupedFields = node.getLocalProperties().getGroupedFields();
+			if (groupedFields != null)
+				for (int i = 0; i < groupedFields.size(); i++)
+					parentSchema.add(groupedFields.get(i));
+
+			FieldList partitioning = node.getGlobalProperties().getPartitioningFields();
+			if (partitioning != null)
+				for (int i = 0; i < partitioning.size(); i++)
+					parentSchema.add(partitioning.get(i));
+		}
+		super.traverse(node, parentSchema, createUtilities);
 	}
 
 	/*
@@ -193,6 +234,21 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 		// add the nodes local information. this automatically consistency checks
 		final DualInputOperator<?, ?, ?, ?> contract = node.getTwoInputNode().getPactContract();
 
+		// add the information to the schema
+		FieldList groupedFields = node.getLocalProperties().getGroupedFields();
+		if (groupedFields != null)
+			for (int i = 0; i < groupedFields.size(); i++) {
+				input1Schema.add(groupedFields.get(i));
+				input2Schema.add(groupedFields.get(i));
+			}
+
+		FieldList partitioning = node.getGlobalProperties().getPartitioningFields();
+		if (partitioning != null)
+			for (int i = 0; i < partitioning.size(); i++) {
+				input1Schema.add(partitioning.get(i));
+				input2Schema.add(partitioning.get(i));
+			}
+
 		final int[] localPositions1 = contract.getKeyColumns(0);
 		final int[] localPositions2 = contract.getKeyColumns(1);
 
@@ -209,7 +265,7 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 		if (contract instanceof CoGroupOperatorBase) {
 			Ordering groupOrder1 = ((CoGroupOperatorBase<?, ?, ?, ?>) contract).getGroupOrderForInputOne();
 			Ordering groupOrder2 = ((CoGroupOperatorBase<?, ?, ?, ?>) contract).getGroupOrderForInputTwo();
-			
+
 			if (groupOrder1 != null) {
 				addOrderingToSchema(groupOrder1, input1Schema);
 			}
@@ -267,16 +323,18 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 	 * @param outgoingChannels
 	 * @param channelsToBeChanged
 	 */
-	private PlanNode addDummyNode(PlanNode node, List<Channel> outgoingChannels, List<Channel> channelsToBeChanged, SopremoRecordLayout layout) {
+	private PlanNode addDummyNode(PlanNode node, List<Channel> outgoingChannels, List<Channel> channelsToBeChanged,
+			SopremoRecordLayout layout) {
 		ITypeRegistry registry = ((SopremoRecordSerializerFactory) outgoingChannels.get(0).getSerializer()).getTypeRegistry();
 		Channel inMemoryChannel = new Channel(node);
 		inMemoryChannel.setShipStrategy(ShipStrategyType.FORWARD);
 		inMemoryChannel.setLocalStrategy(LocalStrategy.NONE);
 
 		MapDescriptor mapDescriptor = new MapDescriptor();
-		MapNode mapNode = new MapNode(new MapOperatorBase<SopremoRecord, SopremoRecord, IdentityMap>(new IdentityMap(), SopremoOperatorInfoHelper.unary(), "dummy"));
+		MapNode mapNode =
+			new MapNode(new MapOperatorBase<SopremoRecord, SopremoRecord, IdentityMap>(new IdentityMap(),
+				SopremoOperatorInfoHelper.unary(), "dummy " + node));
 		mapNode.setDegreeOfParallelism(node.getDegreeOfParallelism());
-		mapNode.setSubtasksPerInstance(node.getSubtasksPerInstance());
 		SingleInputPlanNode dummyNode = mapDescriptor.instantiate(inMemoryChannel, mapNode);
 		inMemoryChannel.setTarget(dummyNode);
 		inMemoryChannel.setSerializer(new SopremoRecordSerializerFactory(layout, registry));
@@ -289,10 +347,13 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 			else if (target instanceof DualInputPlanNode) {
 				if (target instanceof WorksetIterationPlanNode) {
 					throw new UnsupportedOperationException();
-				} else if (((DualInputPlanNode) target).getInput1() == originalChannel)
+				}
+				if (((DualInputPlanNode) target).getInput1() == originalChannel)
 					ReflectUtil.setField(target, "input1", channelWithNewSource);
-				else
+				else if (((DualInputPlanNode) target).getInput2() == originalChannel)
 					ReflectUtil.setField(target, "input2", channelWithNewSource);
+				else
+					throw new IllegalStateException();
 			} else
 				throw new UnsupportedOperationException();
 
@@ -302,27 +363,62 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 	}
 
 	private void addIdentityMapsToOutputsWithMultipleChannels(OptimizedPlan plan) {
-		for (PlanNode node : plan.getAllNodes()) {
-			if(node instanceof WorksetIterationPlanNode) 
-				node = addDummyNode(node, node.getOutgoingChannels(), node.getOutgoingChannels(), 
-					((SopremoRecordSerializerFactory)((WorksetIterationPlanNode) node).getSolutionSetSerializer()).getLayout());
+		plan.accept(new Visitor<PlanNode>() {
+			private Set<PlanNode> visited = new IdentitySet<PlanNode>();
 
-			List<Channel> outgoingChannels = node.getOutgoingChannels();
-			if (outgoingChannels.size() > 1) {
-				ListMultimap<SopremoRecordLayout, Channel> layouts = ArrayListMultimap.create();
-				for (Channel channel : outgoingChannels)
-					layouts.put(((SopremoRecordSerializerFactory) channel.getSerializer()).getLayout(), channel);
-
-				// we need indeed different layouts; create a dummy map node for each layout
-				if (layouts.keySet().size() > 1) {
-					// layout to dummy node is empty, so we can ignore all nodes that also require empty layout
-					layouts.removeAll(SopremoRecordLayout.EMPTY);
-
-					for (SopremoRecordLayout layout : layouts.keySet()) {
-						List<Channel> channelsToBeChanged = layouts.get(layout);
-						addDummyNode(node, outgoingChannels, channelsToBeChanged, SopremoRecordLayout.EMPTY);
-					}
+			@Override
+			public boolean preVisit(PlanNode visitable) {
+				if (this.visited.add(visitable)) {
+					if (visitable instanceof WorksetIterationPlanNode)
+						((WorksetIterationPlanNode) visitable).acceptForStepFunction(this);
+					checkNode(visitable);
+					return true;
 				}
+				return false;
+			}
+
+			@Override
+			public void postVisit(PlanNode visitable) {
+			}
+		});
+	}
+
+	/**
+	 * @param node
+	 * @return
+	 */
+	private void checkNode(PlanNode node) {
+		if (node instanceof WorksetIterationPlanNode)
+			node = addDummyNode(node, node.getOutgoingChannels(), node.getOutgoingChannels(),
+				((SopremoRecordSerializerFactory) ((WorksetIterationPlanNode) node).getSolutionSetSerializer()).getLayout());
+
+		List<Channel> outgoingChannels = node.getOutgoingChannels();
+		if (outgoingChannels.size() > 1) {
+			ListMultimap<SopremoRecordLayout, Channel> layouts = ArrayListMultimap.create();
+			for (Channel channel : outgoingChannels)
+				layouts.put(((SopremoRecordSerializerFactory) channel.getSerializer()).getLayout(), channel);
+
+			// we need indeed different layouts; create a dummy map node for each layout
+			if (layouts.keySet().size() > 1) {
+				// layout to dummy node is empty, so we can ignore all nodes that also require empty layout
+				layouts.removeAll(SopremoRecordLayout.EMPTY);
+				for (SopremoRecordLayout layout : layouts.keySet()) {
+					List<Channel> channelsToBeChanged = layouts.get(layout);
+					addDummyNode(node, outgoingChannels, channelsToBeChanged, SopremoRecordLayout.EMPTY);
+				}
+			}
+			fixInputs(node);
+		}
+		
+	}
+
+	private void fixInputs(PlanNode node) {
+		if(node instanceof NAryUnionPlanNode) {
+			Iterable<Channel> inputs = node.getInputs();
+			for (Channel channel : inputs) {
+				channel.setSerializer(new SopremoRecordSerializerFactory(SopremoRecordLayout.EMPTY, this.typeRegistry));
+				if(channel.getSource() instanceof SourcePlanNode)
+					((SourcePlanNode)channel.getSource()).setSerializer(new SopremoRecordSerializerFactory(SopremoRecordLayout.EMPTY, this.typeRegistry));
 			}
 		}
 	}
@@ -340,9 +436,8 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 				// should be union node; code is written to be easily performed on other node types, but that could
 				// result in unforseeable side-effects
 				NAryUnionPlanNode source = (NAryUnionPlanNode) sinkPlanNode.getInput().getSource();
-				Iterator<Channel> inputs = source.getInputs();
-				while (inputs.hasNext()) {
-					Channel channel = inputs.next();
+				Iterable<Channel> inputs = source.getListOfInputs();
+				for (Channel channel : inputs) {
 					// here we depend on a modifiable return
 					channel.getSource().getOutgoingChannels().remove(channel);
 				}
@@ -364,7 +459,6 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 						mergedOrder.appendOrdering(fieldPositions[index], null, fieldOrders[index]);
 			} else
 				mergedOrder = localOrder;
-			input.getLocalProperties().setOrdering(mergedOrder);
 			input.setLocalStrategy(input.getLocalStrategy(), new FieldList(mergedOrder.getFieldPositions()),
 				mergedOrder.getFieldSortDirections());
 		}
@@ -387,14 +481,6 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 		@Override
 		public void adjustGlobalPropertiesForFullParallelismChange() {
 			this.originalChannel.adjustGlobalPropertiesForFullParallelismChange();
-		}
-
-		/**
-		 * @see eu.stratosphere.compiler.plan.Channel#adjustGlobalPropertiesForLocalParallelismChange()
-		 */
-		@Override
-		public void adjustGlobalPropertiesForLocalParallelismChange() {
-			this.originalChannel.adjustGlobalPropertiesForLocalParallelismChange();
 		}
 
 		/**
@@ -462,20 +548,155 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 
 		/**
 		 * @return
-		 * @see eu.stratosphere.compiler.plan.Channel#getMemoryGlobalStrategy()
+		 * @see org.apache.flink.compiler.plan.Channel#getRelativeTempMemory()
 		 */
 		@Override
-		public long getMemoryGlobalStrategy() {
-			return this.originalChannel.getMemoryGlobalStrategy();
+		public double getRelativeTempMemory() {
+			return this.originalChannel.getRelativeTempMemory();
+		}
+
+		/**
+		 * @param relativeTempMemory
+		 * @see org.apache.flink.compiler.plan.Channel#setRelativeTempMemory(double)
+		 */
+		@Override
+		public void setRelativeTempMemory(double relativeTempMemory) {
+			this.originalChannel.setRelativeTempMemory(relativeTempMemory);
 		}
 
 		/**
 		 * @return
-		 * @see eu.stratosphere.compiler.plan.Channel#getMemoryLocalStrategy()
+		 * @see org.apache.flink.compiler.plan.Channel#getRelativeMemoryGlobalStrategy()
 		 */
 		@Override
-		public long getMemoryLocalStrategy() {
-			return this.originalChannel.getMemoryLocalStrategy();
+		public double getRelativeMemoryGlobalStrategy() {
+			return this.originalChannel.getRelativeMemoryGlobalStrategy();
+		}
+
+		/**
+		 * @param relativeMemoryGlobalStrategy
+		 * @see org.apache.flink.compiler.plan.Channel#setRelativeMemoryGlobalStrategy(double)
+		 */
+		@Override
+		public void setRelativeMemoryGlobalStrategy(double relativeMemoryGlobalStrategy) {
+			this.originalChannel.setRelativeMemoryGlobalStrategy(relativeMemoryGlobalStrategy);
+		}
+
+		/**
+		 * @return
+		 * @see org.apache.flink.compiler.plan.Channel#getRelativeMemoryLocalStrategy()
+		 */
+		@Override
+		public double getRelativeMemoryLocalStrategy() {
+			return this.originalChannel.getRelativeMemoryLocalStrategy();
+		}
+
+		/**
+		 * @param relativeMemoryLocalStrategy
+		 * @see org.apache.flink.compiler.plan.Channel#setRelativeMemoryLocalStrategy(double)
+		 */
+		@Override
+		public void setRelativeMemoryLocalStrategy(double relativeMemoryLocalStrategy) {
+			this.originalChannel.setRelativeMemoryLocalStrategy(relativeMemoryLocalStrategy);
+		}
+
+		/**
+		 * @return
+		 * @see org.apache.flink.compiler.plan.Channel#isOnDynamicPath()
+		 */
+		@Override
+		public boolean isOnDynamicPath() {
+			return this.originalChannel.isOnDynamicPath();
+		}
+
+		/**
+		 * @return
+		 * @see org.apache.flink.compiler.plan.Channel#getCostWeight()
+		 */
+		@Override
+		public int getCostWeight() {
+			return this.originalChannel.getCostWeight();
+		}
+
+		/**
+		 * @return
+		 * @see org.apache.flink.compiler.plan.Channel#getEstimatedOutputSize()
+		 */
+		@Override
+		public long getEstimatedOutputSize() {
+			return this.originalChannel.getEstimatedOutputSize();
+		}
+
+		/**
+		 * @return
+		 * @see org.apache.flink.compiler.plan.Channel#getEstimatedNumRecords()
+		 */
+		@Override
+		public long getEstimatedNumRecords() {
+			return this.originalChannel.getEstimatedNumRecords();
+		}
+
+		/**
+		 * @return
+		 * @see org.apache.flink.compiler.plan.Channel#getEstimatedAvgWidthPerOutputRecord()
+		 */
+		@Override
+		public float getEstimatedAvgWidthPerOutputRecord() {
+			return this.originalChannel.getEstimatedAvgWidthPerOutputRecord();
+		}
+
+		/**
+		 * @return
+		 * @see org.apache.flink.compiler.plan.Channel#getRequiredGlobalProps()
+		 */
+		@Override
+		public RequestedGlobalProperties getRequiredGlobalProps() {
+			return this.originalChannel.getRequiredGlobalProps();
+		}
+
+		/**
+		 * @param requiredGlobalProps
+		 * @see org.apache.flink.compiler.plan.Channel#setRequiredGlobalProps(org.apache.flink.compiler.dataproperties.RequestedGlobalProperties)
+		 */
+		@Override
+		public void setRequiredGlobalProps(RequestedGlobalProperties requiredGlobalProps) {
+			this.originalChannel.setRequiredGlobalProps(requiredGlobalProps);
+		}
+
+		/**
+		 * @return
+		 * @see org.apache.flink.compiler.plan.Channel#getRequiredLocalProps()
+		 */
+		@Override
+		public RequestedLocalProperties getRequiredLocalProps() {
+			return this.originalChannel.getRequiredLocalProps();
+		}
+
+		/**
+		 * @param requiredLocalProps
+		 * @see org.apache.flink.compiler.plan.Channel#setRequiredLocalProps(org.apache.flink.compiler.dataproperties.RequestedLocalProperties)
+		 */
+		@Override
+		public void setRequiredLocalProps(RequestedLocalProperties requiredLocalProps) {
+			this.originalChannel.setRequiredLocalProps(requiredLocalProps);
+		}
+
+		/**
+		 * @param newUnionNode
+		 * @see org.apache.flink.compiler.plan.Channel#swapUnionNodes(org.apache.flink.compiler.plan.PlanNode)
+		 */
+		@Override
+		public void swapUnionNodes(PlanNode newUnionNode) {
+			this.originalChannel.swapUnionNodes(newUnionNode);
+		}
+
+		/**
+		 * @return
+		 * @see org.apache.flink.compiler.plan.Channel#getMaxDepth()
+		 */
+		@Override
+		public int getMaxDepth() {
+			return this.originalChannel.getMaxDepth();
 		}
 
 		/**
@@ -543,15 +764,6 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 
 		/**
 		 * @return
-		 * @see eu.stratosphere.compiler.plan.Channel#getTempMemory()
-		 */
-		@Override
-		public long getTempMemory() {
-			return this.originalChannel.getTempMemory();
-		}
-
-		/**
-		 * @return
 		 * @see eu.stratosphere.compiler.plan.Channel#getTempMode()
 		 */
 		@Override
@@ -607,24 +819,6 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 		@Override
 		public void setLocalStrategyComparator(TypeComparatorFactory<?> localStrategyComparator) {
 			this.originalChannel.setLocalStrategyComparator(localStrategyComparator);
-		}
-
-		/**
-		 * @param memoryGlobalStrategy
-		 * @see eu.stratosphere.compiler.plan.Channel#setMemoryGlobalStrategy(long)
-		 */
-		@Override
-		public void setMemoryGlobalStrategy(long memoryGlobalStrategy) {
-			this.originalChannel.setMemoryGlobalStrategy(memoryGlobalStrategy);
-		}
-
-		/**
-		 * @param memoryLocalStrategy
-		 * @see eu.stratosphere.compiler.plan.Channel#setMemoryLocalStrategy(long)
-		 */
-		@Override
-		public void setMemoryLocalStrategy(long memoryLocalStrategy) {
-			this.originalChannel.setMemoryLocalStrategy(memoryLocalStrategy);
 		}
 
 		/**
@@ -693,15 +887,6 @@ public class SopremoRecordPostPass extends GenericFlatTypePostPass<Class<? exten
 		@Override
 		public void setTarget(PlanNode target) {
 			this.originalChannel.setTarget(target);
-		}
-
-		/**
-		 * @param tempMemory
-		 * @see eu.stratosphere.compiler.plan.Channel#setTempMemory(long)
-		 */
-		@Override
-		public void setTempMemory(long tempMemory) {
-			this.originalChannel.setTempMemory(tempMemory);
 		}
 
 		/**

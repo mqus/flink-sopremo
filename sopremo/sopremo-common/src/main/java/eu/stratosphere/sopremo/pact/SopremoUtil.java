@@ -17,6 +17,8 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.impl.SimpleLog;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.util.StringUtils;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Registration;
@@ -25,7 +27,6 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.google.common.reflect.TypeToken;
 
-import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sopremo.ISopremoType;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.cache.NodeCache;
@@ -41,7 +42,6 @@ import eu.stratosphere.sopremo.type.typed.TypedObjectNode;
 import eu.stratosphere.sopremo.type.typed.TypedObjectNodeFactory;
 import eu.stratosphere.util.ICloneable;
 import eu.stratosphere.util.KryoUtil;
-import eu.stratosphere.util.StringUtils;
 
 /**
  * Provides utility methods for sopremo

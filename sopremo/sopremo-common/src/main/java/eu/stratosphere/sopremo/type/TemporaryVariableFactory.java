@@ -19,7 +19,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
-import eu.stratosphere.util.ReflectionUtil;
+import org.apache.flink.util.ReflectionUtil;
 
 /**
  */

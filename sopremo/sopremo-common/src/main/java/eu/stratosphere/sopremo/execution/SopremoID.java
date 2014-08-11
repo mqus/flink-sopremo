@@ -14,7 +14,7 @@
  **********************************************************************************************************************/
 package eu.stratosphere.sopremo.execution;
 
-import eu.stratosphere.nephele.AbstractID;
+import org.apache.flink.runtime.AbstractID;
 
 /**
  */

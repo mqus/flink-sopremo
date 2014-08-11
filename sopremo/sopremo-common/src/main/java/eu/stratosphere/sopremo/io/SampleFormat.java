@@ -17,10 +17,11 @@ package eu.stratosphere.sopremo.io;
 import java.io.IOException;
 import java.net.URI;
 
-import eu.stratosphere.api.common.io.InputFormat;
-import eu.stratosphere.api.common.io.statistics.BaseStatistics;
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.core.io.InputSplit;
+import org.apache.flink.api.common.io.InputFormat;
+import org.apache.flink.api.common.io.statistics.BaseStatistics;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.core.io.InputSplit;
+
 import eu.stratosphere.sopremo.operator.Property;
 import eu.stratosphere.sopremo.pact.SopremoUtil;
 import eu.stratosphere.sopremo.type.IJsonNode;

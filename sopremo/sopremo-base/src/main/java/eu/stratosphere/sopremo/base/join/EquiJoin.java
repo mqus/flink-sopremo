@@ -1,6 +1,7 @@
 package eu.stratosphere.sopremo.base.join;
 
-import eu.stratosphere.api.common.functions.Function;
+import org.apache.flink.api.common.functions.Function;
+
 import eu.stratosphere.sopremo.operator.Internal;
 
 @Internal

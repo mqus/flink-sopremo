@@ -8,11 +8,11 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.flink.api.common.operators.DualInputOperator;
+import org.apache.flink.api.common.operators.Operator;
+
 import com.google.common.base.Predicates;
 
-import eu.stratosphere.api.common.operators.DualInputOperator;
-import eu.stratosphere.api.common.operators.Operator;
-import eu.stratosphere.api.common.operators.util.OperatorUtil;
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.base.join.AntiJoin;
 import eu.stratosphere.sopremo.base.join.EquiJoin;
@@ -37,7 +37,7 @@ public class TwoSourceJoin extends TwoSourceJoinBase<TwoSourceJoin> {
 	private BinaryBooleanExpression condition = new ComparativeExpression(new InputSelection(0),
 		ComparativeExpression.BinaryOperator.EQUAL, new InputSelection(1));
 
-	private TwoSourceJoinBase<?> strategy;
+	private eu.stratosphere.sopremo.operator.ElementaryOperator<?> strategy;
 
 	private boolean inverseInputs;
 
@@ -225,7 +225,7 @@ public class TwoSourceJoin extends TwoSourceJoinBase<TwoSourceJoin> {
 	 * 
 	 * @return the strategy
 	 */
-	TwoSourceJoinBase<?> getStrategy() {
+	eu.stratosphere.sopremo.operator.ElementaryOperator<?> getStrategy() {
 		return this.strategy;
 	}
 

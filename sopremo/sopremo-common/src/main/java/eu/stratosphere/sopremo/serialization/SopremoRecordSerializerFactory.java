@@ -15,9 +15,10 @@
 
 package eu.stratosphere.sopremo.serialization;
 
-import eu.stratosphere.api.common.typeutils.TypeSerializer;
-import eu.stratosphere.api.common.typeutils.TypeSerializerFactory;
-import eu.stratosphere.configuration.Configuration;
+import org.apache.flink.api.common.typeutils.TypeSerializer;
+import org.apache.flink.api.common.typeutils.TypeSerializerFactory;
+import org.apache.flink.configuration.Configuration;
+
 import eu.stratosphere.sopremo.packages.ITypeRegistry;
 import eu.stratosphere.sopremo.pact.SopremoUtil;
 
@@ -128,4 +129,18 @@ public class SopremoRecordSerializerFactory implements TypeSerializerFactory<Sop
 		SopremoUtil.setObject(config, LAYOUT_KEY, this.layout);
 		SopremoUtil.setObject(config, TYPES_KEY, this.typeRegistry);
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("SopremoRecordSerializerFactory [layout=");
+		builder.append(this.layout);
+		builder.append("]");
+		return builder.toString();
+	}
+	
+	
 }

@@ -3,15 +3,16 @@ package eu.stratosphere.sopremo.operator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.flink.api.common.functions.AbstractRichFunction;
+import org.apache.flink.api.common.functions.Function;
+import org.apache.flink.api.common.operators.SingleInputOperator;
+import org.apache.flink.api.common.operators.base.CollectorMapOperatorBase;
+import org.apache.flink.api.common.operators.base.FlatMapOperatorBase;
+import org.apache.flink.api.common.operators.base.GroupReduceOperatorBase;
+import org.apache.flink.api.common.operators.util.UserCodeClassWrapper;
+import org.apache.flink.configuration.Configuration;
 import org.junit.Test;
 
-import eu.stratosphere.api.common.functions.AbstractFunction;
-import eu.stratosphere.api.common.functions.Function;
-import eu.stratosphere.api.common.operators.SingleInputOperator;
-import eu.stratosphere.api.common.operators.base.CollectorMapOperatorBase;
-import eu.stratosphere.api.common.operators.base.GroupReduceOperatorBase;
-import eu.stratosphere.api.common.operators.util.UserCodeClassWrapper;
-import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sopremo.expressions.ObjectAccess;
 import eu.stratosphere.sopremo.io.SopremoOperatorInfoHelper;
 import eu.stratosphere.sopremo.pact.JsonCollector;
@@ -79,7 +80,7 @@ public class ElementaryOperatorTest {
 	@Test
 	public void getOperatorShouldReturnTheJoiningOperatorToTheFirstFunction() {
 		final SopremoRecordLayout layout = SopremoRecordLayout.create(new ObjectAccess("someField"));
-		final eu.stratosphere.api.common.operators.Operator<?> contract =
+		final org.apache.flink.api.common.operators.Operator<?> contract =
 			new OperatorWithTwoFunctions().getOperator(layout);
 		assertEquals(GroupReduceOperatorBase.class, contract.getClass());
 		Class<?> userCodeClass = contract.getUserCodeWrapper().getUserCodeClass();
@@ -89,9 +90,9 @@ public class ElementaryOperatorTest {
 
 	@Test
 	public void getOperatorShouldReturnTheJoiningOperatorToTheOnlyFunction() {
-		final eu.stratosphere.api.common.operators.Operator<?> contract =
+		final org.apache.flink.api.common.operators.Operator<?> contract =
 			new OperatorWithOneFunction().getOperator(LAYOUT);
-		assertEquals(CollectorMapOperatorBase.class, contract.getClass());
+		assertEquals(FlatMapOperatorBase.class, contract.getClass());
 		assertEquals(OperatorWithOneFunction.Implementation.class, contract.getUserCodeWrapper().getUserCodeClass());
 	}
 
@@ -195,7 +196,7 @@ public class ElementaryOperatorTest {
 
 	@InputCardinality(1)
 	static class OperatorWithUnknownFunction extends ElementaryOperator<OperatorWithUnknownFunction> {
-		static class Implementation extends AbstractFunction {
+		static class Implementation extends AbstractRichFunction {
 
 			/**
 			 * 
@@ -204,7 +205,7 @@ public class ElementaryOperatorTest {
 
 			/*
 			 * (non-Javadoc)
-			 * @see eu.stratosphere.api.record.functions.Function#close()
+			 * @see org.apache.flink.api.record.functions.Function#close()
 			 */
 			@Override
 			public void close() throws Exception {
@@ -212,7 +213,7 @@ public class ElementaryOperatorTest {
 
 			/*
 			 * (non-Javadoc)
-			 * @see eu.stratosphere.api.record.functions.Function#open(eu.stratosphere.configuration.Configuration)
+			 * @see org.apache.flink.api.record.functions.Function#open(eu.stratosphere.configuration.Configuration)
 			 */
 			@Override
 			public void open(final Configuration parameters) throws Exception {

@@ -20,5 +20,5 @@ bin=`cd "$bin"; pwd`
 . "$bin"/config.sh
 
 # Stops the sopremo server
-$STRATOSPHERE_BIN_DIR/sopremo-server.sh stop
+$FLINK_BIN_DIR/sopremo-server.sh stop
 

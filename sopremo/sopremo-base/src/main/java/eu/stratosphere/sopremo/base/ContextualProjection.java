@@ -1,13 +1,13 @@
 package eu.stratosphere.sopremo.base;
 
-import eu.stratosphere.api.common.operators.base.CrossOperatorBase.CrossWithSmall;
+import org.apache.flink.api.common.operators.base.CrossOperatorBase.CrossWithSmall;
+
 import eu.stratosphere.sopremo.expressions.ObjectAccess;
 import eu.stratosphere.sopremo.expressions.PathSegmentExpression;
 import eu.stratosphere.sopremo.operator.ElementaryOperator;
 import eu.stratosphere.sopremo.operator.InputCardinality;
 import eu.stratosphere.sopremo.operator.Internal;
 import eu.stratosphere.sopremo.operator.Property;
-import eu.stratosphere.sopremo.pact.JsonCollector;
 import eu.stratosphere.sopremo.pact.SopremoCross;
 import eu.stratosphere.sopremo.type.IJsonNode;
 
@@ -42,9 +42,9 @@ public class ContextualProjection extends ElementaryOperator<ContextualProjectio
 		private PathSegmentExpression contextPath;
 
 		@Override
-		protected void cross(final IJsonNode value, final IJsonNode context, final JsonCollector<IJsonNode> out) {
+		protected IJsonNode cross(final IJsonNode value, final IJsonNode context) {
 			this.contextPath.set(value, context);
-			out.collect(value);
+			return value;
 		}
 	}
 }

@@ -14,7 +14,8 @@
  **********************************************************************************************************************/
 package eu.stratosphere.sopremo.util;
 
-import eu.stratosphere.types.Value;
+import org.apache.flink.types.Value;
+
 
 /**
  */

@@ -2,12 +2,14 @@ package eu.stratosphere.sopremo.pact;
 
 import java.util.Iterator;
 
+import org.apache.flink.api.common.functions.AbstractRichFunction;
+import org.apache.flink.api.common.functions.CombineFunction;
+import org.apache.flink.api.common.functions.GroupReduceFunction;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.util.Collector;
+
 import com.google.common.reflect.TypeToken;
 
-import eu.stratosphere.api.common.functions.AbstractFunction;
-import eu.stratosphere.api.common.functions.GenericCombine;
-import eu.stratosphere.api.common.functions.GenericGroupReduce;
-import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sopremo.EvaluationContext;
 import eu.stratosphere.sopremo.SopremoEnvironment;
 import eu.stratosphere.sopremo.serialization.SopremoRecord;
@@ -16,15 +18,14 @@ import eu.stratosphere.sopremo.type.IJsonNode;
 import eu.stratosphere.sopremo.type.IStreamNode;
 import eu.stratosphere.sopremo.type.StreamNode;
 import eu.stratosphere.sopremo.type.typed.TypedObjectNode;
-import eu.stratosphere.util.Collector;
 
 /**
  * An abstract implementation of the {@link GenericReducer}. SopremoReduce provides the functionality to convert the
  * standard input of the ReduceFunction to a more manageable representation (the input is converted to an
  * {@link IStreamNode} ).
  */
-public abstract class GenericSopremoReduce<Elem extends IJsonNode, Out extends IJsonNode> extends AbstractFunction
-		implements GenericGroupReduce<SopremoRecord, SopremoRecord>, GenericCombine<SopremoRecord>, SopremoFunction {
+public abstract class GenericSopremoReduce<Elem extends IJsonNode, Out extends IJsonNode> extends AbstractRichFunction
+		implements GroupReduceFunction<SopremoRecord, SopremoRecord>, CombineFunction<SopremoRecord>, SopremoFunction {
 	private EvaluationContext context;
 
 	private JsonCollector<Out> collector;
@@ -39,18 +40,16 @@ public abstract class GenericSopremoReduce<Elem extends IJsonNode, Out extends I
 	 * eu.stratosphere.api.record.functions.Collector)
 	 */
 	@Override
-	public void combine(final Iterator<SopremoRecord> records, final Collector<SopremoRecord> collector)
-			throws Exception {
-		this.collector.configure(collector);
-		this.iterator.setIterator(records);
+	public SopremoRecord combine(final Iterable<SopremoRecord> records) throws Exception {
+		this.iterator.setIterator(records.iterator());
 
 		try {
 			if (SopremoUtil.DEBUG && SopremoUtil.LOG.isTraceEnabled()) {
 				final ArrayNode<Elem> array = new ArrayNode<Elem>(this.array);
 				SopremoUtil.LOG.trace(String.format("%s %s", this.getContext().getOperatorDescription(), array));
-				this.combine(array, this.collector);
+				return collector.wrap(this.combine(array));
 			} else
-				this.combine(this.array, this.collector);
+				return collector.wrap(this.combine(this.array));
 		} catch (final RuntimeException e) {
 			SopremoUtil.LOG.error(String.format("Error occurred @ %s with %s: %s",
 				this.getContext().getOperatorDescription(),
@@ -88,9 +87,9 @@ public abstract class GenericSopremoReduce<Elem extends IJsonNode, Out extends I
 	 * eu.stratosphere.api.record.functions.Collector)
 	 */
 	@Override
-	public void reduce(final Iterator<SopremoRecord> records, final Collector<SopremoRecord> out) {
+	public void reduce(final Iterable<SopremoRecord> records, final Collector<SopremoRecord> out) {
 		this.collector.configure(out);
-		this.iterator.setIterator(records);
+		this.iterator.setIterator(records.iterator());
 
 		try {
 			if (SopremoUtil.DEBUG && SopremoUtil.LOG.isTraceEnabled()) {
@@ -124,8 +123,8 @@ public abstract class GenericSopremoReduce<Elem extends IJsonNode, Out extends I
 	 *        The collector to write the result to.
 	 *        decide whether to retry the combiner execution.
 	 */
-	protected void combine(final IStreamNode<Elem> values, final JsonCollector<Out> out) {
-		this.reduce(values, out);
+	protected Out combine(final IStreamNode<Elem> values) {
+		return (Out) values.iterator().next();
 	}
 
 	/**

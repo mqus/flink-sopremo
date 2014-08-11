@@ -5,6 +5,11 @@ import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.flink.api.common.Plan;
+import org.apache.flink.api.common.functions.Function;
+import org.apache.flink.api.common.operators.base.GenericDataSinkBase;
+import org.apache.flink.api.common.operators.base.GenericDataSourceBase;
+import org.apache.flink.api.java.functions.RichGroupReduceFunction.Combinable;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -12,11 +17,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.api.common.functions.Function;
-import eu.stratosphere.api.common.operators.base.GenericDataSinkBase;
-import eu.stratosphere.api.common.operators.base.GenericDataSourceBase;
-import eu.stratosphere.api.java.record.operators.ReduceOperator.Combinable;
 import eu.stratosphere.pact.common.plan.PactModule;
 import eu.stratosphere.sopremo.EqualCloneTest;
 import eu.stratosphere.sopremo.expressions.ObjectAccess;
@@ -110,15 +110,15 @@ public class SopremoPlanTest extends EqualCloneTest<SopremoPlan> {
 
 	private void expectPact(final Plan plan, final Class<?> pactFunction) {
 		final PactModule module = PactModule.valueOf(plan.getDataSinks());
-		final ArrayList<eu.stratosphere.api.common.operators.Operator<?>> pacts =
+		final ArrayList<org.apache.flink.api.common.operators.Operator<?>> pacts =
 			Lists.newArrayList(module.getReachableNodes());
 
 		Assert.assertEquals(3, pacts.size());
 
 		Assert.assertTrue(Iterables.removeIf(pacts, Predicates.instanceOf(GenericDataSourceBase.class)));
 		Assert.assertTrue(Iterables.removeIf(pacts, Predicates.instanceOf(GenericDataSinkBase.class)));
-		final eu.stratosphere.api.common.operators.Operator<?> contract =
-			Iterables.find(pacts, Predicates.instanceOf(eu.stratosphere.api.common.operators.Operator.class));
+		final org.apache.flink.api.common.operators.Operator<?> contract =
+			Iterables.find(pacts, Predicates.instanceOf(org.apache.flink.api.common.operators.Operator.class));
 		Assert.assertNotNull(contract);
 		Assert.assertSame(pactFunction, contract.getUserCodeWrapper().getUserCodeClass());
 	}
