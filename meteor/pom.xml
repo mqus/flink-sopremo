@@ -2,14 +2,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>hll</artifactId>
+    <artifactId>flink-sopremo</artifactId>
     <groupId>eu.stratosphere</groupId>
-    <version>0.6-SNAPSHOT</version>
+    <version>0.10-SNAPSHOT</version>
   </parent>
   <artifactId>meteor</artifactId>
   <packaging>pom</packaging>
+  <version>0.10-SNAPSHOT</version>
+
   <name>meteor</name>
-  <inceptionYear>2011</inceptionYear>
+  <inceptionYear>2015</inceptionYear>
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>

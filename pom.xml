@@ -12,13 +12,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>eu.stratosphere</groupId>
-	<artifactId>hll</artifactId>
-	<version>0.6-SNAPSHOT</version>
+	<artifactId>flink-sopremo</artifactId>
+	<version>0.10-SNAPSHOT</version>
 
-	<name>hll</name>
+	<name>flink-sopremo</name>
 	<packaging>pom</packaging>
-	<url>http://github.com/dimalabs/ozone-meteor</url>
-	<inceptionYear>2013</inceptionYear>
+	<url>http://github.com/mqus/sopremo-flink</url>
+	<inceptionYear>2015</inceptionYear>
 
 	<licenses>
 		<license>
@@ -29,9 +29,9 @@
 	</licenses>
 
 	<scm>
-		<url>https://github.com/dimalabs/ozone-meteor</url>
-		<connection>scm:git:git@github.com:dimalabs/ozone-meteor.git</connection>
-		<developerConnection>scm:git:git@github.com:dimalabs/ozone-meteor.git</developerConnection>
+		<url>https://github.com/mqus/flink-sopremo</url>
+		<connection>scm:git:git@github.com:mqus/flink-sopremo.git</connection>
+		<developerConnection>scm:git:git@github.com:mqus/flink-sopremo.git</developerConnection>
 	</scm>
 
 	<developers>
@@ -46,12 +46,20 @@
 				<role>developer</role>
 			</roles>
 		</developer>
+		<developer>
+			<id>mqus</id>
+			<name>Markus Richter</name>
+			<roles>
+				<role>maintainer</role>
+				<role>developer</role>
+			</roles>
+		</developer>
 	</developers>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<core.version>0.6-incubating-SNAPSHOT</core.version>
+		<core.version>0.10.1</core.version>
 		<stratosphere-testing.version>0.6-SNAPSHOT</stratosphere-testing.version>
 	</properties>
 

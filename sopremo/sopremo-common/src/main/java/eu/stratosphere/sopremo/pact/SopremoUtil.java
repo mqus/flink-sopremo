@@ -3,6 +3,7 @@ package eu.stratosphere.sopremo.pact;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
