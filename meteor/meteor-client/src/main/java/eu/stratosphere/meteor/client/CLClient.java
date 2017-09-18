@@ -156,7 +156,7 @@ public class CLClient {
 		this.sopremoClient.setExecutionMode(ExecutionMode.RUN_WITH_STATISTICS);
 
 		if (cmd.hasOption('d')) 
-			this.sopremoClient.getJobConfig().setInteger(ConfigConstants.DEFAULT_PARALLELIZATION_DEGREE_KEY,
+			this.sopremoClient.getJobConfig().setInteger(ConfigConstants.DEFAULT_PARALLELISM_KEY,
 				parseInt(cmd, 'd'));
 //		if (cmd.hasOption('i')) 
 //			this.sopremoClient.getJobConfig().setInteger(ConfigConstants.PARALLELIZATION_MAX_INTRA_NODE_DEGREE_KEY,

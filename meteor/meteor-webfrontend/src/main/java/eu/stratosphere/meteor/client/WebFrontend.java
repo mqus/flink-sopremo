@@ -60,7 +60,7 @@ public class WebFrontend {
 		GlobalConfiguration.loadConfiguration(configDir);
 		final Configuration config = GlobalConfiguration.getConfiguration();
 
-		// add stratosphere base dir to config
+		// add flink base dir to config
 		config.setString(ConfigConstants.FLINK_BASE_DIR_PATH_KEY, configDir + "/..");
 		if (resourceDir != null)
 			config.setString(RESOURCEDIR, resourceDir);

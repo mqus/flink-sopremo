@@ -67,6 +67,12 @@ public class MeteorContextHandler extends HandlerList {
 	/** status of job **/
 	private static boolean jobInProgress = false;
 
+	/** constants moved from ConfigConstants.java **/
+
+	public static final String DEFAULT_WEB_ROOT_DIR = "./resources/web-docs/";
+
+	public static final String WEB_ROOT_PATH_KEY = "webclient.rootpath";
+
 	/**
 	 * Construct a new session ServletContextHandler with all servlets.
 	 */
@@ -129,7 +135,7 @@ public class MeteorContextHandler extends HandlerList {
 
 		// get relative resource path
 		final String resources =
-			config.getString(ConfigConstants.WEB_ROOT_PATH_KEY, ConfigConstants.DEFAULT_WEB_ROOT_DIR);
+			config.getString(WEB_ROOT_PATH_KEY, DEFAULT_WEB_ROOT_DIR);
 
 		// get resource folder
 		File resourcesFile;

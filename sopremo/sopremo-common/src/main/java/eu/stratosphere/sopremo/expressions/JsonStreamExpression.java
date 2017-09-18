@@ -22,7 +22,7 @@ import java.util.List;
 import javolution.text.TypeFormat;
 
 import org.apache.flink.api.common.io.InputFormat;
-import org.apache.flink.api.common.operators.base.GenericDataSourceBase;
+import org.apache.flink.api.common.operators.GenericDataSourceBase;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.fs.FileInputSplit;
 import org.apache.flink.core.fs.FileStatus;
